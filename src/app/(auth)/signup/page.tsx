@@ -48,8 +48,12 @@ function SignupForm() {
       } else {
         router.push("/dashboard");
       }
-    } catch {
-      router.push("/dashboard");
+    } catch (err: any) {
+      if (err?.message?.includes("Missing Supabase environment variables")) {
+        setErrorMsg("Production Setup Required: Supabase credentials (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) must be added in your Vercel Project Settings.");
+      } else {
+        router.push("/dashboard");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +80,11 @@ function SignupForm() {
         setIsGoogleLoading(false);
       }
     } catch (err: any) {
-      setErrorMsg(err?.message || "Failed to launch Google sign-up.");
+      if (err?.message?.includes("Missing Supabase environment variables")) {
+        setErrorMsg("Production Setup Required: Supabase credentials (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) must be added in your Vercel Project Settings.");
+      } else {
+        setErrorMsg(err?.message || "Failed to launch Google sign-up.");
+      }
       setIsGoogleLoading(false);
     }
   };

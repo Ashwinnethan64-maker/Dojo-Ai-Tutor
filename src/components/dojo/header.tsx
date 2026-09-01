@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BeltBadge } from "@/components/dojo/belt";
-import { createClient } from "@/lib/supabase/client";
+import { getBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
@@ -23,7 +23,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = getBrowserClient();
+    if (!supabase) return;
+
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
         setUser(data.user);
@@ -42,8 +44,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   }, []);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    const supabase = getBrowserClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     startTransition(() => {
       window.location.href = "/login";
     });

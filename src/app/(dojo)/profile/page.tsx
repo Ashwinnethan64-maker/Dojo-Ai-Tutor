@@ -6,14 +6,16 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { BeltBadge } from "@/components/dojo/belt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { getBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = getBrowserClient();
+    if (!supabase) return;
+
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
         setUser(data.user);
@@ -22,8 +24,10 @@ export default function ProfilePage() {
   }, []);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    const supabase = getBrowserClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     window.location.href = "/login";
   };
 
