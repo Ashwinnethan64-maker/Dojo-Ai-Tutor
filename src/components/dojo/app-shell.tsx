@@ -28,8 +28,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#FFFDF5] text-[#1E293B]">
-      {/* Desktop Sidebar */}
-      <Sidebar className="hidden lg:flex" />
+      {/* Desktop / Tablet Hover-Expandable Sidebar */}
+      <Sidebar className="hidden lg:flex" isMobileDrawer={false} />
 
       {/* Mobile Drawer Overlay */}
       {isMobileMenuOpen && (
@@ -40,6 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           />
           <Sidebar
             className="relative z-10 w-72 shadow-[6px_0_0_#1E293B]"
+            isMobileDrawer={true}
             onNavigate={() => setIsMobileMenuOpen(false)}
           />
         </div>
