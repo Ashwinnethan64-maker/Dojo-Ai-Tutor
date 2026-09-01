@@ -20,10 +20,11 @@ export const metadata: Metadata = {
     "AI-powered coding workouts that help you practice programming, learn from your mistakes, and build lasting coding skills.",
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/Dojo_ai.ico", sizes: "any" },
     ],
-    shortcut: "/Dojo_ai.ico",
-    apple: "/Dojo_ai.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 
@@ -44,7 +45,7 @@ export default function RootLayout({
       className={`${outfit.variable} ${plusJakarta.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/Dojo_ai.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-[#FFFDF5] text-[#1E293B]">
         {children}
