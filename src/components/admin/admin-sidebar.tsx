@@ -10,7 +10,6 @@ import {
   FileCode2,
   Users,
   BarChart3,
-  Settings,
   ShieldAlert,
   ArrowLeft,
 } from "lucide-react";
@@ -22,13 +21,13 @@ import { getBrowserClient } from "@/lib/supabase/client";
 const ADMIN_NAV_ITEMS = [
   { label: "Workouts & Content", href: "/admin", icon: LayoutDashboard },
   { label: "Create Workout", href: "/admin/workouts/new", icon: PlusCircle },
-  { label: "AI Generator Queue", href: "/admin?filter=ai_generated", icon: Sparkles },
-  { label: "Test Suites & Telemetry", href: "/admin?filter=published", icon: FileCode2 },
+  { label: "AI Generator Queue", href: "/admin/ai-generator", icon: Sparkles },
+  { label: "Test Suites & Telemetry", href: "/admin/test-suites", icon: FileCode2 },
 ];
 
 const ADMIN_SECONDARY_NAV = [
-  { label: "User Management", href: "/admin", icon: Users },
-  { label: "Platform Analytics", href: "/admin", icon: BarChart3 },
+  { label: "User Management", href: "/admin/users", icon: Users },
+  { label: "Platform Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
 export function AdminSidebar({ className }: { className?: string }) {
@@ -122,14 +121,20 @@ export function AdminSidebar({ className }: { className?: string }) {
         </div>
 
         {ADMIN_SECONDARY_NAV.map((item) => {
+          const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
           return (
             <Link
               key={item.label}
               href={item.href}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl font-heading text-xs font-bold text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] hover:border-2 hover:border-[#1E293B] border-2 border-transparent transition-all"
+              className={cn(
+                "flex items-center gap-2.5 px-3 py-2 rounded-xl font-heading text-xs font-bold transition-all",
+                isActive
+                  ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
+                  : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
+              )}
             >
-              <Icon className="h-4 w-4 stroke-[2.5] text-[#94A3B8]" />
+              <Icon className={cn("h-4 w-4 stroke-[2.5]", isActive ? "text-white" : "text-[#94A3B8]")} />
               <span>{item.label}</span>
             </Link>
           );

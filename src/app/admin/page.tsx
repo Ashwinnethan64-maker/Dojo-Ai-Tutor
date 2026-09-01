@@ -233,8 +233,8 @@ export default function AdminWorkoutsDashboardPage() {
                 <Copy className="h-3.5 w-3.5 stroke-[2.5]" />
               </Button>
 
-              <Link href={`/workouts/${w.slug}`}>
-                <Button size="sm" variant="secondary" title="Preview Workspace" className="text-xs px-2.5">
+              <Link href={`/admin/workouts/${w.slug}/preview`}>
+                <Button size="sm" variant="secondary" title="Preview Workspace (Admin)" className="text-xs px-2.5">
                   <Eye className="h-3.5 w-3.5 stroke-[2.5]" />
                 </Button>
               </Link>
