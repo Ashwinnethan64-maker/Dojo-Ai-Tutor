@@ -73,19 +73,19 @@ export default function MistakesPage() {
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
       {/* Header Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white dark:bg-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="warning">{activeLanguage.shortName} Memory</Badge>
-            <span className="text-xs text-[#64748B] dark:text-[#94A3B8] font-mono font-bold">
+            <Badge variant="warning">{activeLanguage.shortName.toUpperCase()} MEMORY</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">
               4 Patterns Fingerprinted
             </span>
           </div>
           <h1 className="font-heading text-3xl font-black text-[#1E293B]">
-            Mistake Memory &amp; Cognitive Traps
+            {activeLanguage.shortName} Mistake Memory &amp; Cognitive Traps
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
-            DOJO automatically fingerprints your unique coding mistakes and converts recurring slips into targeted learning flashcards and challenges.
+            DOJO automatically fingerprints your unique {activeLanguage.name} coding mistakes and converts recurring slips into targeted learning flashcards and challenges.
           </p>
         </div>
       </div>

@@ -7,9 +7,11 @@ import { BeltBadge } from "@/components/dojo/belt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getBrowserClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/contexts/language-context";
 import { User } from "@supabase/supabase-js";
 
 export default function ProfilePage() {
+  const { activeLanguage } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -77,7 +79,7 @@ export default function ProfilePage() {
             </div>
 
             <p className="text-xs text-[#64748B] font-medium leading-relaxed">
-              Passionate software practitioner working through Python foundations and algorithmic reasoning in DOJO AI.
+              Passionate software practitioner working through {activeLanguage.name} foundations and algorithmic reasoning in DOJO AI.
             </p>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2 text-xs font-heading font-bold text-[#64748B]">
@@ -87,7 +89,7 @@ export default function ProfilePage() {
               </span>
               <span className="flex items-center gap-1.5 bg-[#FFFDF5] px-3 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
                 <Code2 className="h-3.5 w-3.5 text-[#8B5CF6] stroke-[2.5]" />
-                Primary Track: Python
+                Primary Track: {activeLanguage.name}
               </span>
             </div>
           </div>

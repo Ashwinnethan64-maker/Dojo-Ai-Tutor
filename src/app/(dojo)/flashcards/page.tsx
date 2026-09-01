@@ -11,8 +11,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SpacedRepetitionService } from "@/lib/fsrs/service";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function FlashcardsOverviewPage() {
+  const { activeLanguage } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<"all" | "due" | "new" | "learning" | "mastered" | "difficult">("all");
   const allCards = SpacedRepetitionService.getCards("current-user");
   const filteredCards = SpacedRepetitionService.getFilteredCards("current-user", activeFilter);
@@ -25,16 +27,16 @@ export default function FlashcardsOverviewPage() {
       <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="warning">FSRS Spaced Repetition</Badge>
+            <Badge variant="warning">{activeLanguage.shortName} FSRS Deck</Badge>
             <span className="text-xs text-[#64748B] font-mono">
               Generated from Real Mistakes
             </span>
           </div>
           <h1 className="font-heading text-3xl font-black text-[#1E293B]">
-            Mistake Flashcard Deck
+            {activeLanguage.shortName} Mistake Flashcard Deck
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
-            Active recall flashcards dynamically constructed from syntax slips, logic bugs, and off-by-one errors in your workouts.
+            Active recall flashcards dynamically constructed from {activeLanguage.name} syntax slips, logic bugs, and off-by-one errors in your workouts.
           </p>
         </div>
 
