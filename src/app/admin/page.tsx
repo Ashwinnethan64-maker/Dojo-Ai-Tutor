@@ -92,13 +92,13 @@ export default function AdminWorkoutsDashboardPage() {
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* Admin Header */}
+      {/* Admin Header Banner */}
       <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Badge variant="purple" className="gap-1.5">
               <ShieldAlert className="h-3.5 w-3.5 stroke-[2.5]" />
-              <span>Admin Portal</span>
+              <span>Admin Operations</span>
             </Badge>
             <span className="text-xs text-[#64748B] font-mono font-bold">DOJO Curriculum Moderation</span>
           </div>
