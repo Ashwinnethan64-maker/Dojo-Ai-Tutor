@@ -63,24 +63,30 @@ export function AdminSidebar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "border-r-2 border-[#1E293B] bg-white flex flex-col shrink-0 select-none transition-all duration-200 ease-in-out z-30",
+        "border-r-2 border-[#1E293B] bg-white flex flex-col shrink-0 select-none transition-all duration-200 ease-in-out z-30 overflow-hidden",
         isMobileDrawer
           ? "w-72"
           : isExpanded
           ? "w-64 shadow-[6px_0_0_#1E293B]"
-          : "w-20 shadow-[3px_0_0_#1E293B]",
+          : "w-18 shadow-[3px_0_0_#1E293B]",
         className
       )}
     >
       {/* Admin Brand Header */}
-      <div className="h-18 px-4 flex items-center justify-between border-b-2 border-[#1E293B] bg-[#FFFDF5] overflow-hidden">
-        <Link href="/admin" onClick={onNavigate} className="flex items-center gap-2 min-w-max">
-          <DojoLogo size={isExpanded ? "md" : "sm"} />
+      <div className={cn(
+        "h-18 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center overflow-hidden transition-all duration-200",
+        isExpanded ? "px-5 justify-between" : "justify-center px-0"
+      )}>
+        <Link href="/admin" onClick={onNavigate} className="flex items-center group">
+          <DojoLogo size={isExpanded ? "md" : "sm"} showText={isExpanded} />
         </Link>
       </div>
 
       {/* Admin Scope Badge Banner */}
-      <div className="p-3 mx-2 my-2.5 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B] overflow-hidden transition-all">
+      <div className={cn(
+        "mx-2 my-2.5 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B] overflow-hidden transition-all duration-200",
+        isExpanded ? "p-3" : "p-2 flex justify-center items-center"
+      )}>
         {isExpanded ? (
           <div>
             <div className="flex items-center justify-between">
@@ -96,10 +102,11 @@ export function AdminSidebar({
             </p>
           </div>
         ) : (
-          <div className="flex justify-center" title="Admin Root Console">
-            <span className="px-1.5 py-0.5 rounded-md bg-[#8B5CF6]/10 text-[#8B5CF6] text-[9px] font-mono font-bold border border-[#8B5CF6]">
-              ROOT
-            </span>
+          <div
+            className="w-8 h-8 rounded-xl bg-[#8B5CF6]/10 border border-[#8B5CF6] flex items-center justify-center text-[#8B5CF6] font-mono font-black text-[10px]"
+            title="Admin Root Console"
+          >
+            ADM
           </div>
         )}
       </div>
@@ -107,7 +114,7 @@ export function AdminSidebar({
       {/* Navigation List */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1.5">
         {isExpanded && (
-          <div className="px-2 pb-1">
+          <div className="px-2.5 pb-1">
             <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
               Platform Moderation
             </span>
@@ -128,14 +135,14 @@ export function AdminSidebar({
               onClick={onNavigate}
               title={!isExpanded ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
-                isExpanded ? "justify-between px-3 py-2.5" : "justify-center p-2.5",
+                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group overflow-hidden",
+                isExpanded ? "justify-between px-3 py-2.5" : "justify-center w-10 h-10 mx-auto p-0",
                 isActive
                   ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
                   : "text-[#1E293B] hover:bg-[#FFFDF5] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
               )}
             >
-              <div className="flex items-center gap-2.5 min-w-max">
+              <div className="flex items-center gap-2.5">
                 <Icon
                   className={cn(
                     "h-4.5 w-4.5 stroke-[2.5] shrink-0",
@@ -149,7 +156,7 @@ export function AdminSidebar({
         })}
 
         {isExpanded && (
-          <div className="px-2 pb-1 pt-3">
+          <div className="px-2.5 pb-1 pt-3">
             <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
               Administration
             </span>
@@ -167,8 +174,8 @@ export function AdminSidebar({
               onClick={onNavigate}
               title={!isExpanded ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
-                isExpanded ? "gap-2.5 px-3 py-2" : "justify-center p-2.5",
+                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group overflow-hidden",
+                isExpanded ? "gap-2.5 px-3 py-2" : "justify-center w-10 h-10 mx-auto p-0",
                 isActive
                   ? "bg-[#F472B6] text-[#1E293B] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
                   : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
@@ -187,11 +194,14 @@ export function AdminSidebar({
       </div>
 
       {/* Switch to Learner Arena Action */}
-      <div className="p-3 border-t-2 border-[#1E293B] bg-[#FFFDF5] overflow-hidden">
+      <div className={cn(
+        "border-t-2 border-[#1E293B] bg-[#FFFDF5] overflow-hidden transition-all duration-200",
+        isExpanded ? "p-3" : "p-2 flex justify-center"
+      )}>
         <Link href="/dashboard" onClick={onNavigate} title={!isExpanded ? "Learner Portal" : undefined}>
           <button className={cn(
-            "w-full flex items-center justify-center rounded-xl bg-white border-2 border-[#1E293B] text-xs font-heading font-bold text-[#1E293B] hover:bg-[#FFFDF5] shadow-[2px_2px_0_#1E293B] transition-all",
-            isExpanded ? "gap-1.5 py-2 px-3" : "p-2"
+            "flex items-center justify-center rounded-xl bg-white border-2 border-[#1E293B] text-xs font-heading font-bold text-[#1E293B] hover:bg-[#FFFDF5] shadow-[2px_2px_0_#1E293B] transition-all",
+            isExpanded ? "w-full gap-1.5 py-2 px-3" : "w-8 h-8 p-0"
           )}>
             {isExpanded ? (
               <>

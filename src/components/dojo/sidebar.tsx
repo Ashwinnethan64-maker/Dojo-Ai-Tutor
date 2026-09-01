@@ -89,24 +89,30 @@ export function Sidebar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "border-r-2 border-[#1E293B] bg-white flex flex-col shrink-0 select-none transition-all duration-200 ease-in-out z-30",
+        "border-r-2 border-[#1E293B] bg-white flex flex-col shrink-0 select-none transition-all duration-200 ease-in-out z-30 overflow-hidden",
         isMobileDrawer
           ? "w-72"
           : isExpanded
           ? "w-64 shadow-[6px_0_0_#1E293B]"
-          : "w-20 shadow-[3px_0_0_#1E293B]",
+          : "w-18 shadow-[3px_0_0_#1E293B]",
         className
       )}
     >
       {/* Brand Header */}
-      <div className="h-18 px-4 flex items-center justify-between border-b-2 border-[#1E293B] bg-[#FFFDF5] overflow-hidden">
-        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2 group min-w-max">
-          <DojoLogo size={isExpanded ? "md" : "sm"} />
+      <div className={cn(
+        "h-18 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center overflow-hidden transition-all duration-200",
+        isExpanded ? "px-5 justify-between" : "justify-center px-0"
+      )}>
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center group">
+          <DojoLogo size={isExpanded ? "md" : "sm"} showText={isExpanded} />
         </Link>
       </div>
 
       {/* Belt & Active Language Pill */}
-      <div className="p-3 mx-2 my-2.5 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B] overflow-hidden transition-all">
+      <div className={cn(
+        "mx-2 my-2.5 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B] overflow-hidden transition-all duration-200",
+        isExpanded ? "p-3" : "p-2 flex flex-col items-center justify-center"
+      )}>
         {isExpanded ? (
           <div>
             <div className="flex items-center justify-between mb-1.5">
@@ -120,11 +126,11 @@ export function Sidebar({
             <BeltBadge belt="yellow" size="sm" className="w-full justify-center" />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-1" title={`Track: ${activeLanguage.shortName}`}>
-            <span className="text-[9px] font-heading font-black text-[#8B5CF6] uppercase">
-              {activeLanguage.shortName.slice(0, 3)}
-            </span>
-            <div className="w-3.5 h-3.5 rounded-full bg-[#FBBF24] border border-[#1E293B]" />
+          <div
+            className="w-8 h-8 rounded-xl bg-[#8B5CF6]/10 border border-[#8B5CF6] flex items-center justify-center text-[#8B5CF6] font-mono font-black text-[11px]"
+            title={`Active Track: ${activeLanguage.name}`}
+          >
+            {activeLanguage.shortName.charAt(0)}
           </div>
         )}
       </div>
@@ -132,7 +138,7 @@ export function Sidebar({
       {/* Navigation List */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1.5">
         {isExpanded && (
-          <div className="px-2 pb-1">
+          <div className="px-2.5 pb-1">
             <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
               DOJO Training
             </span>
@@ -153,14 +159,14 @@ export function Sidebar({
               onClick={onNavigate}
               title={!isExpanded ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
-                isExpanded ? "justify-between px-3 py-2.5" : "justify-center p-2.5",
+                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group overflow-hidden",
+                isExpanded ? "justify-between px-3 py-2.5" : "justify-center w-10 h-10 mx-auto p-0",
                 isActive
                   ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
                   : "text-[#1E293B] hover:bg-[#FFFDF5] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
               )}
             >
-              <div className="flex items-center gap-2.5 min-w-max">
+              <div className="flex items-center gap-2.5">
                 <Icon
                   className={cn(
                     "h-4.5 w-4.5 stroke-[2.5] shrink-0",
@@ -173,7 +179,7 @@ export function Sidebar({
               {isExpanded && item.badge && (
                 <span
                   className={cn(
-                    "px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-[#1E293B]",
+                    "px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-[#1E293B] shrink-0",
                     isActive
                       ? "bg-[#FBBF24] text-[#1E293B]"
                       : "bg-[#F1F5F9] text-[#1E293B]"
@@ -187,7 +193,7 @@ export function Sidebar({
         })}
 
         {isExpanded && (
-          <div className="px-2 pb-1 pt-3">
+          <div className="px-2.5 pb-1 pt-3">
             <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
               Account &amp; Workspace
             </span>
@@ -204,8 +210,8 @@ export function Sidebar({
               onClick={onNavigate}
               title={!isExpanded ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
-                isExpanded ? "gap-2.5 px-3 py-2" : "justify-center p-2.5",
+                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group overflow-hidden",
+                isExpanded ? "gap-2.5 px-3 py-2" : "justify-center w-10 h-10 mx-auto p-0",
                 isActive
                   ? "bg-[#F472B6] text-[#1E293B] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
                   : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
@@ -224,23 +230,27 @@ export function Sidebar({
       </div>
 
       {/* User Mini Stats Footer */}
-      <div className="p-3 border-t-2 border-[#1E293B] bg-[#FFFDF5] overflow-hidden">
+      <div className={cn(
+        "border-t-2 border-[#1E293B] bg-[#FFFDF5] overflow-hidden transition-all duration-200",
+        isExpanded ? "p-3" : "p-2 flex justify-center"
+      )}>
         {isExpanded ? (
           <div className="flex items-center justify-between text-xs font-heading font-bold">
-            <div className="flex items-center gap-1.5 text-[#1E293B] bg-[#FBBF24] px-2 py-0.5 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
+            <div className="flex items-center gap-1.5 text-[#1E293B] bg-[#FBBF24] px-2.5 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
               <Flame className="h-3.5 w-3.5 fill-current stroke-[2.5]" />
               <span>5 Days</span>
             </div>
-            <div className="flex items-center gap-1.5 text-white bg-[#8B5CF6] px-2 py-0.5 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
+            <div className="flex items-center gap-1.5 text-white bg-[#8B5CF6] px-2.5 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
               <Zap className="h-3.5 w-3.5 fill-current stroke-[2.5]" />
               <span>1,420 XP</span>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2" title="Streak: 5 Days | 1,420 XP">
-            <div className="w-6 h-6 rounded-full bg-[#FBBF24] border border-[#1E293B] flex items-center justify-center text-[#1E293B]">
-              <Flame className="h-3 w-3 fill-current" />
-            </div>
+          <div
+            className="w-8 h-8 rounded-full bg-[#FBBF24] border-2 border-[#1E293B] flex items-center justify-center text-[#1E293B] shadow-[1px_1px_0_#1E293B]"
+            title="5 Day Streak | 1,420 XP"
+          >
+            <Flame className="h-4 w-4 fill-current" />
           </div>
         )}
       </div>
