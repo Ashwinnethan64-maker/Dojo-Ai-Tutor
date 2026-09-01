@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   RotateCcw,
@@ -13,17 +13,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { SpacedRepetitionService, PersonalizedFlashcard } from "@/lib/fsrs/service";
+import { useLanguage } from "@/contexts/language-context";
 import { Rating } from "ts-fsrs";
 
 export default function FlashcardReviewSessionPage() {
-  const [cards] = useState<PersonalizedFlashcard[]>(() =>
-    SpacedRepetitionService.getFilteredCards("current-user", "due")
-  );
+  const { activeLanguage, activeLanguageId } = useLanguage();
+  const [cards, setCards] = useState<PersonalizedFlashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [revisitedMistakes, setRevisitedMistakes] = useState<string[]>([]);
   const [correctRatingsCount, setCorrectRatingsCount] = useState(0);
+
+  useEffect(() => {
+    const dueCards = SpacedRepetitionService.getFilteredCards("current-user", "due", activeLanguageId);
+    setCards(dueCards);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setIsCompleted(false);
+  }, [activeLanguageId]);
 
   const currentCard = cards[currentIndex];
 
@@ -33,7 +41,8 @@ export default function FlashcardReviewSessionPage() {
     SpacedRepetitionService.reviewCard(
       "current-user",
       currentCard.id,
-      ratingNumber as Rating
+      ratingNumber as Rating,
+      activeLanguageId
     );
 
     if (ratingNumber >= 3) {

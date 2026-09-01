@@ -14,10 +14,10 @@ import { SpacedRepetitionService } from "@/lib/fsrs/service";
 import { useLanguage } from "@/contexts/language-context";
 
 export default function FlashcardsOverviewPage() {
-  const { activeLanguage } = useLanguage();
+  const { activeLanguage, activeLanguageId } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<"all" | "due" | "new" | "learning" | "mastered" | "difficult">("all");
-  const allCards = SpacedRepetitionService.getCards("current-user");
-  const filteredCards = SpacedRepetitionService.getFilteredCards("current-user", activeFilter);
+  const allCards = SpacedRepetitionService.getCards("current-user", activeLanguageId);
+  const filteredCards = SpacedRepetitionService.getFilteredCards("current-user", activeFilter, activeLanguageId);
 
   const dueCount = allCards.filter((c) => c.state === "new" || new Date(c.dueDate) <= new Date()).length;
 
