@@ -10,11 +10,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/contexts/language-context";
 
 const MISTAKES_LEDGER = [
   {
     id: "1",
-    title: "Off-by-One in Range() Upper Bound",
+    title: "Off-by-One in Iteration Upper Bound",
     category: "off_by_one",
     concept: "Loops & Iterations",
     occurrences: 4,
@@ -22,7 +23,7 @@ const MISTAKES_LEDGER = [
     status: "improving",
     mastery: 58,
     severity: 3,
-    description: "Iterating up to range(len(arr) + 1) instead of range(len(arr)), causing IndexError.",
+    description: "Indexing upper bound beyond collection bounds, causing an OutOfBounds index error.",
     flashcardCreated: true,
   },
   {
@@ -35,7 +36,7 @@ const MISTAKES_LEDGER = [
     status: "improving",
     mastery: 68,
     severity: 2,
-    description: "Used print() inside function body instead of returning the computed result, yielding None to caller.",
+    description: "Printed output directly to stdout rather than returning the computed result from function scope.",
     flashcardCreated: true,
   },
   {
@@ -48,33 +49,35 @@ const MISTAKES_LEDGER = [
     status: "resolved",
     mastery: 92,
     severity: 4,
-    description: "Used single '=' assignment operator rather than '==' equality operator inside boolean expression.",
+    description: "Used single '=' assignment operator rather than comparison equality operator inside conditional statement.",
     flashcardCreated: true,
   },
   {
     id: "4",
-    title: "Mutable Default Argument in Function Definition",
+    title: "Variable Hoisting / Uninitialized Reference",
     category: "scope_error",
-    concept: "Functions & Scope",
+    concept: "Variables & Scope",
     occurrences: 1,
     lastSeen: "4 days ago",
     status: "needs_work",
     mastery: 35,
     severity: 4,
-    description: "Defined def foo(items=[]): which caused state leakage across separate invocations.",
+    description: "Attempted to access identifier before declaration within block scope.",
     flashcardCreated: true,
   },
 ];
 
 export default function MistakesPage() {
+  const { activeLanguage } = useLanguage();
+
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
       {/* Header Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white dark:bg-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="warning">Continuous Memory</Badge>
-            <span className="text-xs text-[#64748B] font-mono font-bold">
+            <Badge variant="warning">{activeLanguage.shortName} Memory</Badge>
+            <span className="text-xs text-[#64748B] dark:text-[#94A3B8] font-mono font-bold">
               4 Patterns Fingerprinted
             </span>
           </div>

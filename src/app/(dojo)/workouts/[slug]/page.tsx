@@ -20,6 +20,7 @@ import Editor from "@monaco-editor/react";
 import { WorkoutData } from "@/data/python-curriculum";
 import { GeometricDecoration } from "@/components/dojo/geometric-decoration";
 import { useLanguage } from "@/contexts/language-context";
+import { useTheme } from "@/contexts/theme-context";
 import { getCurriculumForLanguage } from "@/data/curriculum-registry";
 
 export default function DynamicWorkoutWorkspace({
@@ -29,6 +30,7 @@ export default function DynamicWorkoutWorkspace({
 }) {
   const resolvedParams = use(params);
   const { activeLanguage, activeLanguageId } = useLanguage();
+  const { editorTheme } = useTheme();
 
   const topics = getCurriculumForLanguage(activeLanguageId);
 
@@ -353,7 +355,7 @@ export default function DynamicWorkoutWorkspace({
             <Editor
               height="100%"
               language={activeLanguage.editorLanguage}
-              theme="vs-dark"
+              theme={editorTheme}
               value={code}
               onChange={(newVal) => setCode(newVal || "")}
               options={{
