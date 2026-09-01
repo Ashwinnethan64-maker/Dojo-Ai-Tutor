@@ -15,31 +15,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { BeltBadge } from "@/components/dojo/belt";
 import { getBrowserClient } from "@/lib/supabase/client";
+import { useLanguage, SupportedLanguageId } from "@/contexts/language-context";
 import { User } from "@supabase/supabase-js";
 
-export const SUPPORTED_LANGUAGES = [
-  { id: "python", name: "Python 3.12", version: "3.12", badge: "Active Track", status: "ready" },
-  { id: "javascript", name: "JavaScript", version: "ES2024 / Node 20", badge: "Workouts Available", status: "ready" },
-  { id: "typescript", name: "TypeScript", version: "5.4", badge: "Workouts Available", status: "ready" },
-  { id: "cpp", name: "C++ (GCC 13)", version: "C++20", badge: "Workouts Available", status: "ready" },
-  { id: "java", name: "Java (OpenJDK 21)", version: "21", badge: "Workouts Available", status: "ready" },
-  { id: "rust", name: "Rust 1.78", version: "2021", badge: "Workouts Available", status: "ready" },
-  { id: "go", name: "Go 1.22", version: "1.22", badge: "Workouts Available", status: "ready" },
-];
-
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-  const [selectedLang, setSelectedLang] = useState<string>("Python 3.12");
+  const { activeLanguage, activeLanguageId, setActiveLanguage, languages } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    const saved = localStorage.getItem("dojo_active_language");
-    if (saved) {
-      setSelectedLang(saved);
-    }
-
     const supabase = getBrowserClient();
     if (!supabase) return;
 
@@ -60,9 +46,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     };
   }, []);
 
-  const handleSelectLanguage = (langName: string) => {
-    setSelectedLang(langName);
-    localStorage.setItem("dojo_active_language", langName);
+  const handleSelectLanguage = (langId: SupportedLanguageId) => {
+    // Explicit single-choice radio selection: instantly updates global state
+    setActiveLanguage(langId);
     setIsLangOpen(false);
   };
 
@@ -117,7 +103,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             className="gap-1.5 bg-[#FFFDF5] hover:bg-[#FBBF24] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
           >
             <Code2 className="h-3.5 w-3.5 text-[#8B5CF6] stroke-[2.5]" />
-            <span className="font-heading font-bold">{selectedLang}</span>
+            <span className="font-heading font-bold">{activeLanguage.name}</span>
             <ChevronDown className="h-3.5 w-3.5 text-[#64748B] stroke-[2.5]" />
           </Button>
 
@@ -131,12 +117,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               </div>
 
               <div className="max-h-64 overflow-y-auto space-y-1">
-                {SUPPORTED_LANGUAGES.map((lang) => {
-                  const isCurrent = selectedLang.startsWith(lang.name.split(" ")[0]);
+                {languages.map((lang) => {
+                  const isCurrent = activeLanguageId === lang.id;
                   return (
                     <button
                       key={lang.id}
-                      onClick={() => handleSelectLanguage(lang.name)}
+                      onClick={() => handleSelectLanguage(lang.id)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-heading font-bold transition-all text-left cursor-pointer ${
                         isCurrent
                           ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"

@@ -45,15 +45,16 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup");
 
-  // Admin routes protection
+  // Admin routes protection (excluding the public access-denied informational page)
   const isAdminRoute =
-    request.nextUrl.pathname.startsWith("/admin") ||
+    (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/access-denied")) ||
     request.nextUrl.pathname.startsWith("/api/admin");
 
   if (isAdminRoute) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
+      url.searchParams.set("portal", "admin");
       url.searchParams.set("error", "Admin authentication required.");
       return NextResponse.redirect(url);
     }
@@ -64,8 +65,7 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden: Administrator privileges required." }, { status: 403 });
       }
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      url.searchParams.set("error", "unauthorized_admin");
+      url.pathname = "/admin/access-denied";
       return NextResponse.redirect(url);
     }
   }
@@ -90,7 +90,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = isAdminUser(user) ? "/portal-select" : "/dashboard";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 

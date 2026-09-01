@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
+  const requestedPortal = url.searchParams.get("portal") ?? "user";
   const requestedNext = url.searchParams.get("next");
 
   // Handle cancelled or failed Google OAuth directly
@@ -24,9 +25,19 @@ export async function GET(request: Request) {
 
       if (!exchangeError && data?.user) {
         const isAdmin = isAdminUser(data.user);
-        // If user is admin, provide the portal selection page
-        const destinationPath = requestedNext ?? (isAdmin ? "/portal-select" : "/dashboard");
-        const destination = new URL(destinationPath, url.origin);
+
+        // If explicitly requested Admin Portal or direct admin URL
+        if (requestedPortal === "admin" || requestedNext?.startsWith("/admin")) {
+          if (isAdmin) {
+            return NextResponse.redirect(new URL("/admin", url.origin).toString());
+          } else {
+            // Unauthorized access attempt to Admin Portal
+            return NextResponse.redirect(new URL("/admin/access-denied", url.origin).toString());
+          }
+        }
+
+        // Standard User Portal flow: goes straight to /dashboard
+        const destination = new URL(requestedNext || "/dashboard", url.origin);
         return NextResponse.redirect(destination.toString());
       }
       console.error("Code exchange failure:", exchangeError?.message);

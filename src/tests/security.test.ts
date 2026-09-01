@@ -51,4 +51,23 @@ describe("DOJO Security & Sandbox Guardrails Suite", () => {
     assert.strictEqual(res2.awarded, false);
     assert.strictEqual(res2.amount, 0);
   });
+
+  it("verifies server-side admin authorization allowlist and blocks unverified users", () => {
+    const { isAdminUser } = require("../lib/auth/admin");
+    const regularUser = {
+      id: "u1",
+      email: "learner@gmail.com",
+      app_metadata: { role: "student" },
+      user_metadata: { role: "admin" }, // Client-injected role in user_metadata must not grant access
+    };
+    assert.strictEqual(isAdminUser(regularUser), false, "Client metadata must not bypass admin authorization");
+
+    const authorizedAdmin = {
+      id: "u2",
+      email: "ashwinnethan64@gmail.com",
+      app_metadata: { role: "admin" },
+      user_metadata: {},
+    };
+    assert.strictEqual(isAdminUser(authorizedAdmin), true, "Platform admin on allowlist must be authorized");
+  });
 });

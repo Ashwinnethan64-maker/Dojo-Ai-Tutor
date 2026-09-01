@@ -1,8 +1,10 @@
 /**
  * Server-side authorization utility for DOJO AI administrators.
+ * Security Note: Only server-controlled app_metadata and verified email allowlists
+ * can grant administrator privileges. Client-writable user_metadata is untrusted.
  */
 
-// Explicit admin allowlist
+// Explicit admin allowlist (Preserving existing administrator accounts)
 const DEFAULT_ADMIN_EMAILS = [
   "ashwin@maker.com",
   "admin@dojo.ai",
@@ -33,12 +35,11 @@ export function isAdminUser(user: { email?: string | null; user_metadata?: Recor
     return true;
   }
 
-  // 3. Explicit role metadata in Supabase
+  // 3. Server-managed app_metadata in Supabase (cannot be modified by client)
   if (
     user.app_metadata?.role === "admin" ||
-    user.user_metadata?.role === "admin" ||
     user.app_metadata?.is_admin === true ||
-    user.user_metadata?.is_admin === true
+    user.app_metadata?.claims_admin === true
   ) {
     return true;
   }

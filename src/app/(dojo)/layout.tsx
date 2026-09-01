@@ -1,5 +1,6 @@
 import React from "react";
 import { ToastProvider } from "@/components/ui/toast";
+import { LanguageProvider } from "@/contexts/language-context";
 import { AppShell } from "@/components/dojo/app-shell";
 
 export default function DojoLayout({
@@ -9,7 +10,9 @@ export default function DojoLayout({
 }) {
   return (
     <ToastProvider>
-      <AppShell>{children}</AppShell>
+      <LanguageProvider>
+        <AppShell>{children}</AppShell>
+      </LanguageProvider>
     </ToastProvider>
   );
 }

@@ -10,14 +10,18 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PYTHON_TOPICS, WorkoutData } from "@/data/python-curriculum";
+import { WorkoutData } from "@/data/python-curriculum";
+import { useLanguage } from "@/contexts/language-context";
+import { getCurriculumForLanguage } from "@/data/curriculum-registry";
 
 export default function WorkoutsCatalogPage() {
+  const { activeLanguage, activeLanguageId } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
 
+  const topics = getCurriculumForLanguage(activeLanguageId);
   const allWorkouts: { workout: WorkoutData; topicTitle: string }[] = [];
-  for (const topic of PYTHON_TOPICS) {
+  for (const topic of topics) {
     for (const w of topic.workouts) {
       allWorkouts.push({ workout: w, topicTitle: topic.title });
     }
@@ -41,16 +45,16 @@ export default function WorkoutsCatalogPage() {
       <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="purple">DOJO Catalog</Badge>
+            <Badge variant="purple">{activeLanguage.shortName} Catalog</Badge>
             <span className="text-xs text-[#64748B] font-mono font-bold">
               {allWorkouts.length} Interactive Coding Workouts
             </span>
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl font-black text-[#1E293B]">
-            Coding Workouts Catalog
+            {activeLanguage.shortName} Workouts Catalog
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
-            Challenge yourself with automated test suites, error feedback, and progressive AI assistance.
+            Challenge yourself with automated {activeLanguage.shortName} test suites, error feedback, and progressive AI assistance.
           </p>
         </div>
       </div>

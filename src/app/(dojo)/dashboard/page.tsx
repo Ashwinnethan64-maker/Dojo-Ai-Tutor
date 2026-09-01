@@ -22,10 +22,21 @@ import { Progress } from "@/components/ui/progress";
 import { BeltBadge, BeltCard } from "@/components/dojo/belt";
 import { DashboardData } from "@/lib/dashboard/service";
 import { GeometricDecoration } from "@/components/dojo/geometric-decoration";
+import { useLanguage } from "@/contexts/language-context";
+import { getCurriculumForLanguage } from "@/data/curriculum-registry";
 
 export default function DashboardPage() {
+  const { activeLanguage, activeLanguageId } = useLanguage();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const currentCurriculum = getCurriculumForLanguage(activeLanguageId);
+  const primaryWorkout = currentCurriculum[0]?.workouts[0] || {
+    title: "Introductory Workout",
+    slug: "intro-workout",
+    difficulty: "intro",
+    learningObjective: "Language syntax foundations",
+  };
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -38,7 +49,7 @@ export default function DashboardPage() {
         console.warn("Failed fetching dashboard data:", err);
         setIsLoading(false);
       });
-  }, []);
+  }, [activeLanguageId]);
 
   if (isLoading || !data) {
     return (
@@ -66,7 +77,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <BeltBadge belt={data.user.currentBelt} size="sm" />
               <Badge variant="purple">
-                {data.user.currentLanguage} Track
+                {activeLanguage.shortName} Track
               </Badge>
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#1E293B]">
@@ -77,15 +88,15 @@ export default function DashboardPage() {
               <strong className="font-heading font-black text-[#1E293B] uppercase underline decoration-[#FBBF24] decoration-4 underline-offset-2">
                 {data.user.nextBelt || "Black"} Belt
               </strong>
-              . {data.primaryAction.subtitle}
+              . {primaryWorkout.learningObjective}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <Link href={`/workouts/${data.primaryAction.workoutSlug}`}>
+            <Link href={`/workouts/${primaryWorkout.slug}`}>
               <Button size="lg" variant="primary" className="w-full sm:w-auto text-base gap-2 shadow-[6px_6px_0_#1E293B]">
                 <Play className="h-5 w-5 fill-current" />
-                <span>{data.primaryAction.buttonLabel}</span>
+                <span>Continue Workout</span>
               </Button>
             </Link>
           </div>
@@ -132,7 +143,7 @@ export default function DashboardPage() {
             <h2 className="font-heading text-xl font-black text-[#1E293B]">
               Today&apos;s Training
             </h2>
-            <p className="text-xs text-[#64748B]">Targeted coding challenges and memory workouts for this session</p>
+            <p className="text-xs text-[#64748B]">Targeted {activeLanguage.shortName} coding challenges and memory workouts for this session</p>
           </div>
         </div>
 
@@ -141,13 +152,13 @@ export default function DashboardPage() {
           <Card hoverable shadowVariant="hard" className="flex flex-col justify-between">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <Badge variant="purple">Coding Workout</Badge>
+                <Badge variant="purple">{activeLanguage.shortName} Workout</Badge>
                 <span className="text-xs font-heading font-bold text-[#64748B]">
-                  {data.todayTraining.codingWorkout.estimatedMinutes} mins
+                  15 mins
                 </span>
               </div>
               <CardTitle className="text-lg mt-3">
-                {data.todayTraining.codingWorkout.title}
+                {primaryWorkout.title}
               </CardTitle>
               <CardDescription className="text-xs">
                 Solve progressive problem with automated unit tests and Sensei guidance.
@@ -155,8 +166,8 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between text-xs pt-4 border-t-2 border-[#1E293B]/10">
-                <span className="font-heading font-bold text-[#64748B]">Difficulty: {data.todayTraining.codingWorkout.difficulty}</span>
-                <Link href={`/workouts/${data.todayTraining.codingWorkout.slug}`}>
+                <span className="font-heading font-bold text-[#64748B]">Difficulty: {primaryWorkout.difficulty}</span>
+                <Link href={`/workouts/${primaryWorkout.slug}`}>
                   <Button size="sm" variant="secondary" className="gap-1.5">
                     <span>Train</span>
                     <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />

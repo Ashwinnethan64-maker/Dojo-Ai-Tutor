@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,13 +15,11 @@ import {
   Flame,
   Zap,
   Sparkles,
-  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BeltBadge } from "@/components/dojo/belt";
 import { DojoLogo } from "@/components/dojo/logo";
-import { getBrowserClient } from "@/lib/supabase/client";
-import { isAdminUser } from "@/lib/auth/admin";
+import { useLanguage } from "@/contexts/language-context";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -40,18 +38,7 @@ const SECONDARY_NAV = [
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const supabase = getBrowserClient();
-    if (!supabase) return;
-
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user && isAdminUser(data.user)) {
-        setIsAdmin(true);
-      }
-    });
-  }, []);
+  const { activeLanguage } = useLanguage();
 
   return (
     <aside
@@ -74,22 +61,27 @@ export function Sidebar({ className }: { className?: string }) {
             Training Track
           </span>
           <span className="text-xs font-heading font-bold text-[#1E293B]">
-            Python
+            {activeLanguage.shortName}
           </span>
         </div>
         <BeltBadge belt="yellow" size="sm" className="w-full justify-center" />
       </div>
 
-      {/* Main Navigation */}
-      <div className="flex-1 px-3 space-y-1 overflow-y-auto">
-        <div className="px-3 pb-1 pt-2">
+      {/* Navigation List */}
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
+        <div className="px-3 pb-1">
           <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
-            Dojo Training
+            DOJO Training
           </span>
         </div>
+
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
           const Icon = item.icon;
+
           return (
             <Link
               key={item.href}
@@ -97,23 +89,24 @@ export function Sidebar({ className }: { className?: string }) {
               className={cn(
                 "flex items-center justify-between px-3 py-2.5 rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
                 isActive
-                  ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B] -translate-y-0.5"
-                  : "text-[#1E293B] hover:bg-[#FBBF24]/20 hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
+                  ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
+                  : "text-[#1E293B] hover:bg-[#FFFDF5] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
               )}
             >
               <div className="flex items-center gap-2.5">
                 <Icon
                   className={cn(
                     "h-4 w-4 stroke-[2.5]",
-                    isActive ? "text-white" : "text-[#64748B] group-hover:text-[#1E293B]"
+                    isActive ? "text-white" : "text-[#8B5CF6] group-hover:scale-110 transition-transform"
                   )}
                 />
                 <span>{item.label}</span>
               </div>
+
               {item.badge && (
                 <span
                   className={cn(
-                    "text-[10px] px-2 py-0.5 rounded-full font-heading font-bold border border-[#1E293B]",
+                    "px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-[#1E293B]",
                     isActive
                       ? "bg-[#FBBF24] text-[#1E293B]"
                       : "bg-[#F1F5F9] text-[#1E293B]"
@@ -131,22 +124,6 @@ export function Sidebar({ className }: { className?: string }) {
             Account &amp; Workspace
           </span>
         </div>
-
-        {/* Conditionally rendered Admin Portal ONLY for verified administrators */}
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className={cn(
-              "flex items-center gap-2.5 px-3 py-2 rounded-xl font-heading text-xs font-bold transition-all duration-150 group mb-1",
-              pathname.startsWith("/admin")
-                ? "bg-[#FBBF24] text-[#1E293B] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
-                : "text-[#8B5CF6] bg-[#8B5CF6]/10 hover:bg-[#8B5CF6]/20 border-2 border-[#8B5CF6]/30"
-            )}
-          >
-            <Shield className="h-4 w-4 stroke-[2.5] text-[#8B5CF6] group-hover:text-[#1E293B]" />
-            <span>Admin Portal</span>
-          </Link>
-        )}
 
         {SECONDARY_NAV.map((item) => {
           const isActive = pathname === item.href;

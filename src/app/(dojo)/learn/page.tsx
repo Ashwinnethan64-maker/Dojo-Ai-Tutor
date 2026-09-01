@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -11,183 +11,24 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BeltBadge } from "@/components/dojo/belt";
-import { BeltTier } from "@/types";
-
-interface CurriculumTopic {
-  id: string;
-  title: string;
-  slug: string;
-  belt: BeltTier;
-  description: string;
-  progress: number;
-  totalWorkouts: number;
-  completedWorkouts: number;
-  isUnlocked: boolean;
-  concepts: { name: string; mastery: number }[];
-}
-
-const PYTHON_CURRICULUM: CurriculumTopic[] = [
-  {
-    id: "1",
-    title: "1. Introduction & Setup",
-    slug: "intro",
-    belt: "white",
-    description: "Program execution, comments, print statements, and environment fundamentals.",
-    progress: 100,
-    totalWorkouts: 4,
-    completedWorkouts: 4,
-    isUnlocked: true,
-    concepts: [
-      { name: "Syntax Basics", mastery: 100 },
-      { name: "Print & Stdout", mastery: 100 },
-    ],
-  },
-  {
-    id: "2",
-    title: "2. Variables & Memory",
-    slug: "variables",
-    belt: "white",
-    description: "Variable declaration, naming rules, references, and mutability intro.",
-    progress: 100,
-    totalWorkouts: 5,
-    completedWorkouts: 5,
-    isUnlocked: true,
-    concepts: [
-      { name: "Variable Assignment", mastery: 100 },
-      { name: "Re-assignment", mastery: 95 },
-    ],
-  },
-  {
-    id: "3",
-    title: "3. Primitive Data Types",
-    slug: "data-types",
-    belt: "white",
-    description: "Integers, Floats, Strings, Booleans, and explicit type casting.",
-    progress: 90,
-    totalWorkouts: 6,
-    completedWorkouts: 5,
-    isUnlocked: true,
-    concepts: [
-      { name: "Type Casting", mastery: 92 },
-      { name: "Numeric Operations", mastery: 88 },
-    ],
-  },
-  {
-    id: "4",
-    title: "4. Input / Output Operations",
-    slug: "io",
-    belt: "white",
-    description: "Standard input scanning, formatted strings (f-strings), and escaping.",
-    progress: 85,
-    totalWorkouts: 4,
-    completedWorkouts: 3,
-    isUnlocked: true,
-    concepts: [
-      { name: "F-Strings", mastery: 90 },
-      { name: "Parsing User Input", mastery: 80 },
-    ],
-  },
-  {
-    id: "5",
-    title: "5. Operators & Expressions",
-    slug: "operators",
-    belt: "yellow",
-    description: "Arithmetic, comparison, logical, identity, and membership operators.",
-    progress: 80,
-    totalWorkouts: 6,
-    completedWorkouts: 5,
-    isUnlocked: true,
-    concepts: [
-      { name: "Comparison Logic", mastery: 85 },
-      { name: "Logical AND/OR", mastery: 75 },
-    ],
-  },
-  {
-    id: "6",
-    title: "6. Conditional Branching",
-    slug: "conditions",
-    belt: "yellow",
-    description: "if / elif / else structures, truthy/falsy evaluation, and nesting.",
-    progress: 75,
-    totalWorkouts: 6,
-    completedWorkouts: 4,
-    isUnlocked: true,
-    concepts: [
-      { name: "If-Else Trees", mastery: 80 },
-      { name: "Ternary Expressions", mastery: 70 },
-    ],
-  },
-  {
-    id: "7",
-    title: "7. Loops & Iterations",
-    slug: "loops",
-    belt: "yellow",
-    description: "for loops, while loops, range(), break, continue, and loop indexing.",
-    progress: 45,
-    totalWorkouts: 8,
-    completedWorkouts: 3,
-    isUnlocked: true,
-    concepts: [
-      { name: "For in Range", mastery: 45 },
-      { name: "While Loop Bounds", mastery: 40 },
-    ],
-  },
-  {
-    id: "8",
-    title: "8. Functions & Parameters",
-    slug: "functions",
-    belt: "orange",
-    description: "Function definitions, return statements, default args, and scope.",
-    progress: 0,
-    totalWorkouts: 7,
-    completedWorkouts: 0,
-    isUnlocked: true,
-    concepts: [
-      { name: "Return vs Print", mastery: 0 },
-      { name: "Positional & Keyword Args", mastery: 0 },
-    ],
-  },
-  {
-    id: "9",
-    title: "9. String Manipulation",
-    slug: "strings",
-    belt: "orange",
-    description: "Slicing, string methods, immutability, and pattern searching.",
-    progress: 0,
-    totalWorkouts: 6,
-    completedWorkouts: 0,
-    isUnlocked: false,
-    concepts: [
-      { name: "String Slicing", mastery: 0 },
-      { name: "String Methods", mastery: 0 },
-    ],
-  },
-  {
-    id: "10",
-    title: "10. Lists & Sequences",
-    slug: "lists",
-    belt: "green",
-    description: "Dynamic arrays, indexing, slicing, methods, and list comprehensions.",
-    progress: 0,
-    totalWorkouts: 8,
-    completedWorkouts: 0,
-    isUnlocked: false,
-    concepts: [
-      { name: "List Comprehensions", mastery: 0 },
-      { name: "In-place Mutations", mastery: 0 },
-    ],
-  },
-];
+import { useLanguage } from "@/contexts/language-context";
+import { getCurriculumForLanguage } from "@/data/curriculum-registry";
+import { CurriculumTopicData } from "@/data/python-curriculum";
 
 export default function CurriculumPage() {
-  const [selectedTopic, setSelectedTopic] = useState<CurriculumTopic | null>(
-    PYTHON_CURRICULUM[6] // Loops (Active by default)
-  );
+  const { activeLanguage, activeLanguageId } = useLanguage();
+  const topics = getCurriculumForLanguage(activeLanguageId);
+  const [selectedTopic, setSelectedTopic] = useState<CurriculumTopicData | null>(topics[0] || null);
+
+  // When language switches, dynamically point selectedTopic to the current track's first/active module
+  useEffect(() => {
+    setSelectedTopic(topics[0] || null);
+  }, [activeLanguageId]);
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
@@ -195,22 +36,24 @@ export default function CurriculumPage() {
       <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="purple">Mastery Track</Badge>
-            <span className="text-xs text-[#64748B] font-mono font-bold">18 Modules • 10/18 Unlocked</span>
+            <Badge variant="purple">{activeLanguage.name} Track</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">
+              {topics.length} Core Modules • Martial Arts Dojo
+            </span>
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl font-black text-[#1E293B]">
-            Python Curriculum
+            {activeLanguage.shortName} Curriculum
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
-            Progressive curriculum from fundamental syntax to algorithm architecture. Select any unlocked topic to inspect workouts and tested concepts.
+            Progressive {activeLanguage.shortName} curriculum from fundamental syntax to algorithm architecture. Select any unlocked topic to inspect workouts and tested concepts.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/learn/python">
+          <Link href="/workouts">
             <Button size="lg" variant="primary" className="shadow-[6px_6px_0_#1E293B] gap-2">
               <BookOpen className="h-4 w-4 stroke-[2.5]" />
-              <span>Full Track Overview</span>
+              <span>Browse All Workouts</span>
             </Button>
           </Link>
         </div>
@@ -220,11 +63,14 @@ export default function CurriculumPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Topic List */}
         <div className="lg:col-span-2 space-y-3.5">
-          {PYTHON_CURRICULUM.map((topic) => {
-            const isSelected = selectedTopic?.id === topic.id;
-            const isCompleted = topic.isUnlocked && topic.progress === 100;
-            const isAvailable = topic.isUnlocked && topic.progress < 100;
-            const isLocked = !topic.isUnlocked;
+          {topics.map((topic, index) => {
+            const isSelected = selectedTopic?.slug === topic.slug;
+            // First 4 topics are unlocked for demonstration across tracks
+            const isUnlocked = index < 4;
+            const progress = index === 0 ? 100 : index === 1 ? 75 : index === 2 ? 40 : 0;
+            const isCompleted = isUnlocked && progress === 100;
+            const isAvailable = isUnlocked && progress < 100;
+            const isLocked = !isUnlocked;
 
             // Semantic State Container Styles
             let cardClasses = "";
@@ -270,14 +116,14 @@ export default function CurriculumPage() {
 
             return (
               <div
-                key={topic.id}
+                key={topic.slug}
                 role="button"
                 tabIndex={isLocked ? -1 : 0}
                 aria-pressed={isSelected}
                 aria-disabled={isLocked}
-                onClick={() => topic.isUnlocked && setSelectedTopic(topic)}
+                onClick={() => isUnlocked && setSelectedTopic(topic)}
                 onKeyDown={(e) => {
-                  if (topic.isUnlocked && (e.key === "Enter" || e.key === " ")) {
+                  if (isUnlocked && (e.key === "Enter" || e.key === " ")) {
                     e.preventDefault();
                     setSelectedTopic(topic);
                   }
@@ -326,23 +172,23 @@ export default function CurriculumPage() {
 
                   <div className="text-right shrink-0">
                     <span className={`text-xs font-mono ${countClasses}`}>
-                      {topic.completedWorkouts}/{topic.totalWorkouts} Workouts
+                      {topic.workouts.length} Workouts
                     </span>
                   </div>
                 </div>
 
-                {topic.isUnlocked && (
+                {isUnlocked && (
                   <div className={`mt-4 pt-3.5 border-t ${isSelected ? "border-[#8B5CF6]/20" : "border-white/10"} flex items-center justify-between gap-4`}>
                     <div className="flex-1">
                       <Progress
-                        value={topic.progress}
+                        value={progress}
                         variant={isSelected ? "primary" : isCompleted ? "success" : "yellow"}
                         className="h-2"
                       />
                     </div>
                     <div className="flex items-center gap-2 shrink-0 text-xs font-mono">
                       <span className={metaLabelClasses}>Progress:</span>
-                      <span className={metaValClasses}>{topic.progress}%</span>
+                      <span className={metaValClasses}>{progress}%</span>
                     </div>
                   </div>
                 )}
@@ -368,58 +214,46 @@ export default function CurriculumPage() {
                 </p>
               </div>
 
-              {/* Progress Summary Box */}
-              <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] space-y-2 shadow-[3px_3px_0_#1E293B]">
-                <div className="flex justify-between items-center text-xs font-heading font-bold">
-                  <span className="text-[#64748B]">Topic Completion</span>
-                  <span className="text-[#8B5CF6] font-mono">{selectedTopic.progress}%</span>
-                </div>
-                <Progress value={selectedTopic.progress} variant="primary" className="h-2.5" />
-                <div className="flex justify-between text-[11px] text-[#64748B] font-mono">
-                  <span>{selectedTopic.completedWorkouts} Solved</span>
-                  <span>{selectedTopic.totalWorkouts} Total</span>
-                </div>
-              </div>
-
-              {/* Tested Concepts list */}
+              {/* Workouts in topic summary */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-[#8B5CF6] stroke-[2.5]" />
                   <h3 className="text-xs font-heading font-black uppercase tracking-wider text-[#1E293B]">
-                    Tested Concepts
+                    Included Workouts ({selectedTopic.workouts.length})
                   </h3>
                 </div>
                 <div className="space-y-2">
-                  {selectedTopic.concepts.map((c) => (
-                    <div
-                      key={c.name}
-                      className="p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between text-xs shadow-[2px_2px_0_#1E293B]"
+                  {selectedTopic.workouts.map((w) => (
+                    <Link
+                      key={w.slug}
+                      href={`/workouts/${w.slug}`}
+                      className="p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] hover:bg-[#8B5CF6]/10 flex items-center justify-between text-xs shadow-[2px_2px_0_#1E293B] transition-all block group"
                     >
-                      <span className="font-heading font-bold text-[#1E293B]">
-                        {c.name}
-                      </span>
-                      <span className="font-mono font-bold text-[#8B5CF6] bg-[#8B5CF6]/10 px-2 py-0.5 rounded-lg border border-[#8B5CF6]/30">
-                        {c.mastery}% Mastery
-                      </span>
-                    </div>
+                      <div>
+                        <span className="font-heading font-bold text-[#1E293B] group-hover:text-[#8B5CF6] transition-colors">
+                          {w.title}
+                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-[#64748B] font-mono capitalize">{w.difficulty}</span>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-[#64748B] group-hover:text-[#8B5CF6] transition-colors" />
+                    </Link>
                   ))}
                 </div>
               </div>
 
               {/* Primary Action Button */}
               <div className="space-y-2 pt-2">
-                <Link href={`/workouts/${selectedTopic.slug}`}>
-                  <Button size="lg" variant="primary" className="w-full gap-2 shadow-[4px_4px_0_#1E293B]">
-                    <Dumbbell className="h-4 w-4 stroke-[2.5]" />
-                    <span>Start Next Workout</span>
-                    <ArrowRight className="h-4 w-4 stroke-[2.5]" />
-                  </Button>
-                </Link>
-                <Link href={`/learn/python/${selectedTopic.slug}`}>
-                  <Button size="sm" variant="secondary" className="w-full text-xs">
-                    <span>View Theory &amp; Concepts</span>
-                  </Button>
-                </Link>
+                {selectedTopic.workouts[0] && (
+                  <Link href={`/workouts/${selectedTopic.workouts[0].slug}`}>
+                    <Button size="lg" variant="primary" className="w-full gap-2 shadow-[4px_4px_0_#1E293B]">
+                      <Dumbbell className="h-4 w-4 stroke-[2.5]" />
+                      <span>Start Workout</span>
+                      <ArrowRight className="h-4 w-4 stroke-[2.5]" />
+                    </Button>
+                  </Link>
+                )}
               </div>
             </Card>
           ) : (

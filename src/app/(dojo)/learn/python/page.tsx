@@ -11,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BeltBadge } from "@/components/dojo/belt";
-import { PYTHON_TOPICS } from "@/data/python-curriculum";
-import { BeltTier } from "@/types";
+import { useLanguage } from "@/contexts/language-context";
+import { getCurriculumForLanguage } from "@/data/curriculum-registry";
 
 export default function PythonCurriculumPage() {
+  const { activeLanguage, activeLanguageId } = useLanguage();
   const [selectedBelt, setSelectedBelt] = useState<string>("all");
 
-  const filteredTopics = PYTHON_TOPICS.filter((topic) => {
+  const topics = getCurriculumForLanguage(activeLanguageId);
+
+  const filteredTopics = topics.filter((topic) => {
     if (selectedBelt === "all") return true;
     return topic.belt === selectedBelt;
   });
@@ -28,14 +31,14 @@ export default function PythonCurriculumPage() {
       <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="purple">Python 3 Track</Badge>
-            <span className="text-xs text-[#64748B] font-mono font-bold">18 Core Modules • 50+ Workouts</span>
+            <Badge variant="purple">{activeLanguage.shortName} Track</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">{topics.length} Core Modules • Martial Arts Dojo</span>
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl font-black text-[#1E293B]">
-            Python Martial Arts Curriculum
+            {activeLanguage.shortName} Martial Arts Curriculum
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
-            From absolute zero to algorithmic mastery. Complete structured training sessions with automated test suites and Sensei guidance.
+            From absolute zero to algorithmic mastery in {activeLanguage.shortName}. Complete structured training sessions with automated test suites and Sensei guidance.
           </p>
         </div>
 
@@ -55,7 +58,7 @@ export default function PythonCurriculumPage() {
           onClick={() => setSelectedBelt("all")}
           className="text-xs"
         >
-          All Topics ({PYTHON_TOPICS.length})
+          All Topics ({topics.length})
         </Button>
         <Button
           size="sm"
