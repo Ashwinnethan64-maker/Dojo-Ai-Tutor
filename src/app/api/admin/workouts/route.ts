@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AdminContentService } from "@/lib/admin/service";
+import { createClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/auth/admin";
+
+async function verifyAdminAuth() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !isAdminUser(user)) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
+  const isAuthorized = await verifyAdminAuth();
+  if (!isAuthorized) {
+    return NextResponse.json({ error: "Unauthorized access to admin content." }, { status: 403 });
+  }
+
   try {
     const workouts = AdminContentService.getAllWorkouts();
     return NextResponse.json({ workouts }, { status: 200 });
@@ -11,6 +31,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const isAuthorized = await verifyAdminAuth();
+  if (!isAuthorized) {
+    return NextResponse.json({ error: "Unauthorized access to admin content." }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
 
@@ -38,6 +63,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const isAuthorized = await verifyAdminAuth();
+  if (!isAuthorized) {
+    return NextResponse.json({ error: "Unauthorized access to admin content." }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const updated = AdminContentService.updateWorkout(body.id, body.updates);

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -20,6 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 import { BeltBadge } from "@/components/dojo/belt";
 import { DojoLogo } from "@/components/dojo/logo";
+import { getBrowserClient } from "@/lib/supabase/client";
+import { isAdminUser } from "@/lib/auth/admin";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -32,13 +34,24 @@ const NAV_ITEMS = [
 ];
 
 const SECONDARY_NAV = [
-  { label: "Admin Portal", href: "/admin", icon: Shield },
   { label: "Profile", href: "/profile", icon: User },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const supabase = getBrowserClient();
+    if (!supabase) return;
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user && isAdminUser(data.user)) {
+        setIsAdmin(true);
+      }
+    });
+  }, []);
 
   return (
     <aside
@@ -115,9 +128,26 @@ export function Sidebar({ className }: { className?: string }) {
 
         <div className="px-3 pb-1 pt-4">
           <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
-            Management
+            Account &amp; Workspace
           </span>
         </div>
+
+        {/* Conditionally rendered Admin Portal ONLY for verified administrators */}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-2 rounded-xl font-heading text-xs font-bold transition-all duration-150 group mb-1",
+              pathname.startsWith("/admin")
+                ? "bg-[#FBBF24] text-[#1E293B] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
+                : "text-[#8B5CF6] bg-[#8B5CF6]/10 hover:bg-[#8B5CF6]/20 border-2 border-[#8B5CF6]/30"
+            )}
+          >
+            <Shield className="h-4 w-4 stroke-[2.5] text-[#8B5CF6] group-hover:text-[#1E293B]" />
+            <span>Admin Portal</span>
+          </Link>
+        )}
+
         {SECONDARY_NAV.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;

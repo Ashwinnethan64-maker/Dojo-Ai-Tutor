@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminUser } from "@/lib/auth/admin";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -44,6 +45,31 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup");
 
+  // Admin routes protection
+  const isAdminRoute =
+    request.nextUrl.pathname.startsWith("/admin") ||
+    request.nextUrl.pathname.startsWith("/api/admin");
+
+  if (isAdminRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("error", "Admin authentication required.");
+      return NextResponse.redirect(url);
+    }
+
+    const authorized = isAdminUser(user);
+    if (!authorized) {
+      if (request.nextUrl.pathname.startsWith("/api/admin")) {
+        return NextResponse.json({ error: "Forbidden: Administrator privileges required." }, { status: 403 });
+      }
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.searchParams.set("error", "unauthorized_admin");
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Protected application routes
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
@@ -53,7 +79,8 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/flashcards") ||
     request.nextUrl.pathname.startsWith("/progress") ||
     request.nextUrl.pathname.startsWith("/profile") ||
-    request.nextUrl.pathname.startsWith("/settings");
+    request.nextUrl.pathname.startsWith("/settings") ||
+    request.nextUrl.pathname.startsWith("/portal-select");
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
@@ -63,7 +90,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = isAdminUser(user) ? "/portal-select" : "/dashboard";
     return NextResponse.redirect(url);
   }
 

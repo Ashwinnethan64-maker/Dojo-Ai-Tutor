@@ -7,6 +7,9 @@ import {
   Circle,
   Lock,
   Dumbbell,
+  BookOpen,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -183,92 +186,164 @@ const PYTHON_CURRICULUM: CurriculumTopic[] = [
 
 export default function CurriculumPage() {
   const [selectedTopic, setSelectedTopic] = useState<CurriculumTopic | null>(
-    PYTHON_CURRICULUM[6] // Loops
+    PYTHON_CURRICULUM[6] // Loops (Active by default)
   );
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
+      {/* Header Banner */}
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="purple">Mastery Track</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">18 Modules • 10/18 Unlocked</span>
+          </div>
+          <h1 className="font-heading text-3xl sm:text-4xl font-black text-[#1E293B]">
             Python Curriculum
           </h1>
-          <p className="text-sm text-zinc-500">
-            18 structured topics from absolute zero to object-oriented mastery
+          <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
+            Progressive curriculum from fundamental syntax to algorithm architecture. Select any unlocked topic to inspect workouts and tested concepts.
           </p>
         </div>
+
         <div className="flex items-center gap-3">
-          <BeltBadge belt="yellow" size="md" />
-          <span className="text-xs text-zinc-400 font-mono">10/18 Unlocked</span>
+          <Link href="/learn/python">
+            <Button size="lg" variant="primary" className="shadow-[6px_6px_0_#1E293B] gap-2">
+              <BookOpen className="h-4 w-4 stroke-[2.5]" />
+              <span>Full Track Overview</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Curriculum Topic Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Curriculum Topic Grid & Active Topic Drawer */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Topic List */}
-        <div className="lg:col-span-2 space-y-3">
+        <div className="lg:col-span-2 space-y-3.5">
           {PYTHON_CURRICULUM.map((topic) => {
             const isSelected = selectedTopic?.id === topic.id;
+            const isCompleted = topic.isUnlocked && topic.progress === 100;
+            const isAvailable = topic.isUnlocked && topic.progress < 100;
+            const isLocked = !topic.isUnlocked;
+
+            // Semantic State Container Styles
+            let cardClasses = "";
+            let titleClasses = "";
+            let descClasses = "";
+            let countClasses = "";
+            let metaLabelClasses = "";
+            let metaValClasses = "";
+
+            if (isSelected) {
+              // 2. ACTIVE / SELECTED CARD: Clean white/cream card with crisp high-contrast dark text and prominent purple border
+              cardClasses = "bg-white border-2 border-[#8B5CF6] shadow-[6px_6px_0_#8B5CF6] ring-2 ring-[#8B5CF6]/30 cursor-pointer transform -translate-y-0.5";
+              titleClasses = "text-[#1E293B] font-black";
+              descClasses = "text-[#475569] font-medium";
+              countClasses = "text-[#8B5CF6] font-bold";
+              metaLabelClasses = "text-[#64748B]";
+              metaValClasses = "text-[#8B5CF6] font-bold";
+            } else if (isCompleted) {
+              // 1. COMPLETED CARD: Sleek dark surface with vibrant mint/emerald progress and crisp white text
+              cardClasses = "bg-[#1E293B] border-2 border-[#1E293B] shadow-[4px_4px_0_#0F172A] hover:border-[#34D399] hover:shadow-[6px_6px_0_#34D399] cursor-pointer";
+              titleClasses = "text-white font-bold";
+              descClasses = "text-[#94A3B8] font-normal";
+              countClasses = "text-[#34D399] font-bold";
+              metaLabelClasses = "text-[#94A3B8]";
+              metaValClasses = "text-[#34D399] font-bold";
+            } else if (isAvailable) {
+              // 3. INACTIVE / AVAILABLE CARD: Distinct dark slate surface with yellow/purple accent
+              cardClasses = "bg-[#1E293B] border-2 border-[#1E293B] shadow-[4px_4px_0_#0F172A] hover:border-[#FBBF24] hover:shadow-[6px_6px_0_#FBBF24] cursor-pointer";
+              titleClasses = "text-white font-bold";
+              descClasses = "text-[#CBD5E1] font-normal";
+              countClasses = "text-[#FBBF24] font-bold";
+              metaLabelClasses = "text-[#94A3B8]";
+              metaValClasses = "text-white font-bold";
+            } else {
+              // 4. LOCKED CARD: Clear muted slate surface with distinct lock, NOT transparent/washed out
+              cardClasses = "bg-[#F1F5F9] border-2 border-[#CBD5E1] shadow-[2px_2px_0_#CBD5E1] cursor-not-allowed opacity-90";
+              titleClasses = "text-[#64748B] font-bold";
+              descClasses = "text-[#94A3B8] font-normal";
+              countClasses = "text-[#94A3B8] font-medium";
+              metaLabelClasses = "text-[#94A3B8]";
+              metaValClasses = "text-[#64748B] font-bold";
+            }
+
             return (
               <div
                 key={topic.id}
+                role="button"
+                tabIndex={isLocked ? -1 : 0}
+                aria-pressed={isSelected}
+                aria-disabled={isLocked}
                 onClick={() => topic.isUnlocked && setSelectedTopic(topic)}
-                className={`p-4 rounded-xl border transition-all duration-150 cursor-pointer ${
-                  !topic.isUnlocked
-                    ? "opacity-50 border-zinc-200 dark:border-zinc-800/40 bg-zinc-50/50 dark:bg-zinc-900/10 cursor-not-allowed"
-                    : isSelected
-                    ? "border-indigo-500/80 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-xs"
-                    : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] hover:border-zinc-300 dark:hover:border-zinc-700"
-                }`}
+                onKeyDown={(e) => {
+                  if (topic.isUnlocked && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    setSelectedTopic(topic);
+                  }
+                }}
+                className={`p-5 rounded-2xl transition-all duration-150 focus:outline-none focus:ring-4 focus:ring-[#8B5CF6]/40 ${cardClasses}`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="pt-0.5">
-                      {!topic.isUnlocked ? (
-                        <Lock className="h-4 w-4 text-zinc-400" />
-                      ) : topic.progress === 100 ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                    <div className="pt-0.5 shrink-0">
+                      {isLocked ? (
+                        <div className="w-7 h-7 rounded-xl bg-[#E2E8F0] border-2 border-[#CBD5E1] flex items-center justify-center">
+                          <Lock className="h-3.5 w-3.5 text-[#64748B] stroke-[2.5]" />
+                        </div>
+                      ) : isCompleted ? (
+                        <div className="w-7 h-7 rounded-xl bg-[#34D399] border-2 border-[#1E293B] flex items-center justify-center shadow-[2px_2px_0_#1E293B]">
+                          <CheckCircle2 className="h-4 w-4 text-[#1E293B] stroke-[3]" />
+                        </div>
+                      ) : isSelected ? (
+                        <div className="w-7 h-7 rounded-xl bg-[#8B5CF6] border-2 border-[#1E293B] flex items-center justify-center shadow-[2px_2px_0_#1E293B]">
+                          <Circle className="h-3.5 w-3.5 text-white fill-white" />
+                        </div>
                       ) : (
-                        <Circle className="h-4 w-4 text-indigo-500" />
+                        <div className="w-7 h-7 rounded-xl bg-[#FBBF24] border-2 border-[#1E293B] flex items-center justify-center shadow-[2px_2px_0_#1E293B]">
+                          <Circle className="h-3.5 w-3.5 text-[#1E293B] stroke-[2.5]" />
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={`text-base font-heading ${titleClasses}`}>
                           {topic.title}
                         </h3>
                         <BeltBadge belt={topic.belt} size="sm" showIcon={false} />
+                        {isSelected && (
+                          <Badge variant="purple" className="text-[10px] py-0 px-2">
+                            Active
+                          </Badge>
+                        )}
                       </div>
-                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className={`text-xs leading-relaxed line-clamp-2 ${descClasses}`}>
                         {topic.description}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-xs font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+                    <span className={`text-xs font-mono ${countClasses}`}>
                       {topic.completedWorkouts}/{topic.totalWorkouts} Workouts
                     </span>
                   </div>
                 </div>
 
                 {topic.isUnlocked && (
-                  <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/40 flex items-center justify-between gap-4">
-                    <Progress
-                      value={topic.progress}
-                      variant={
-                        topic.progress === 100
-                          ? "success"
-                          : topic.progress < 50
-                          ? "accent"
-                          : "primary"
-                      }
-                      className="h-1.5"
-                    />
-                    <span className="text-xs font-mono text-zinc-400 shrink-0">
-                      {topic.progress}%
-                    </span>
+                  <div className={`mt-4 pt-3.5 border-t ${isSelected ? "border-[#8B5CF6]/20" : "border-white/10"} flex items-center justify-between gap-4`}>
+                    <div className="flex-1">
+                      <Progress
+                        value={topic.progress}
+                        variant={isSelected ? "primary" : isCompleted ? "success" : "yellow"}
+                        className="h-2"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 text-xs font-mono">
+                      <span className={metaLabelClasses}>Progress:</span>
+                      <span className={metaValClasses}>{topic.progress}%</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -276,53 +351,79 @@ export default function CurriculumPage() {
           })}
         </div>
 
-        {/* Selected Topic Details Drawer */}
+        {/* Selected Topic Details Drawer (Guaranteed High Contrast) */}
         <div className="lg:col-span-1">
           {selectedTopic ? (
-            <Card className="sticky top-6">
-              <CardHeader>
+            <Card shadowVariant="hard" className="sticky top-6 border-2 border-[#1E293B] bg-white p-6 space-y-6">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <BeltBadge belt={selectedTopic.belt} size="sm" />
                   <Badge variant="purple">Active Topic</Badge>
                 </div>
-                <CardTitle className="text-lg mt-2">{selectedTopic.title}</CardTitle>
-                <CardDescription className="text-xs">{selectedTopic.description}</CardDescription>
-              </CardHeader>
+                <h2 className="font-heading text-xl font-black text-[#1E293B]">
+                  {selectedTopic.title}
+                </h2>
+                <p className="text-xs text-[#64748B] leading-relaxed font-medium">
+                  {selectedTopic.description}
+                </p>
+              </div>
 
-              <CardContent className="space-y-5">
-                {/* Concepts list */}
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">
-                    Tested Concepts
-                  </h4>
-                  <div className="space-y-2.5">
-                    {selectedTopic.concepts.map((c) => (
-                      <div
-                        key={c.name}
-                        className="p-2.5 rounded-lg border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30 flex items-center justify-between text-xs"
-                      >
-                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                          {c.name}
-                        </span>
-                        <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">
-                          {c.mastery}% Mastery
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Progress Summary Box */}
+              <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] space-y-2 shadow-[3px_3px_0_#1E293B]">
+                <div className="flex justify-between items-center text-xs font-heading font-bold">
+                  <span className="text-[#64748B]">Topic Completion</span>
+                  <span className="text-[#8B5CF6] font-mono">{selectedTopic.progress}%</span>
                 </div>
+                <Progress value={selectedTopic.progress} variant="primary" className="h-2.5" />
+                <div className="flex justify-between text-[11px] text-[#64748B] font-mono">
+                  <span>{selectedTopic.completedWorkouts} Solved</span>
+                  <span>{selectedTopic.totalWorkouts} Total</span>
+                </div>
+              </div>
 
-                {/* Primary Action Button */}
+              {/* Tested Concepts list */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[#8B5CF6] stroke-[2.5]" />
+                  <h3 className="text-xs font-heading font-black uppercase tracking-wider text-[#1E293B]">
+                    Tested Concepts
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  {selectedTopic.concepts.map((c) => (
+                    <div
+                      key={c.name}
+                      className="p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between text-xs shadow-[2px_2px_0_#1E293B]"
+                    >
+                      <span className="font-heading font-bold text-[#1E293B]">
+                        {c.name}
+                      </span>
+                      <span className="font-mono font-bold text-[#8B5CF6] bg-[#8B5CF6]/10 px-2 py-0.5 rounded-lg border border-[#8B5CF6]/30">
+                        {c.mastery}% Mastery
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Primary Action Button */}
+              <div className="space-y-2 pt-2">
                 <Link href={`/workouts/${selectedTopic.slug}`}>
-                  <Button className="w-full gap-2 shadow-sm">
-                    <Dumbbell className="h-4 w-4" />
+                  <Button size="lg" variant="primary" className="w-full gap-2 shadow-[4px_4px_0_#1E293B]">
+                    <Dumbbell className="h-4 w-4 stroke-[2.5]" />
                     <span>Start Next Workout</span>
+                    <ArrowRight className="h-4 w-4 stroke-[2.5]" />
                   </Button>
                 </Link>
-              </CardContent>
+                <Link href={`/learn/python/${selectedTopic.slug}`}>
+                  <Button size="sm" variant="secondary" className="w-full text-xs">
+                    <span>View Theory &amp; Concepts</span>
+                  </Button>
+                </Link>
+              </div>
             </Card>
           ) : (
-            <Card className="p-8 text-center text-zinc-400 text-xs">
+            <Card shadowVariant="hard" className="p-8 text-center bg-white border-2 border-[#1E293B] text-[#64748B] text-xs font-medium">
               Select a topic from the curriculum to view workout breakdown.
             </Card>
           )}
