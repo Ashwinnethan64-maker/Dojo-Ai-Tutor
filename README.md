@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![DOJO AI Banner](public/globe.svg)
+<img src="./public/Dojo_ai_banner.png" alt="DOJO AI Banner" width="100%" style="max-width: 800px; border-radius: 16px; margin-bottom: 16px;" />
 
 **Master Programming Through Real Sandboxed Practice, Cognitive Mistake Tracking, and DeepSeek AI Mentorship.**
 
