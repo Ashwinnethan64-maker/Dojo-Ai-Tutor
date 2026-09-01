@@ -4,7 +4,7 @@ import { WorkoutGeneratorService } from "../lib/ai/workouts";
 import { GeneratedWorkoutSchema } from "../lib/ai/workout-schemas";
 
 describe("Adaptive Workout Generator Subsystem", () => {
-  it("synthesizes a targeted workout for off-by-one loop weaknesses", async () => {
+  it("synthesizes a targeted Python workout for off-by-one loop weaknesses", async () => {
     const workout = await WorkoutGeneratorService.generateTargetedWorkout({
       languageId: "python",
       targetWeakness: "Off-by-One Range Boundary Errors",
@@ -20,6 +20,40 @@ describe("Adaptive Workout Generator Subsystem", () => {
     assert.ok(workout.visibleTestCases.length >= 1);
     assert.ok(workout.hiddenTestCases.length >= 1);
     assert.ok(workout.hints.length >= 2);
+  });
+
+  it("synthesizes a targeted C++ workout with authentic vector and C++ syntax", async () => {
+    const workout = await WorkoutGeneratorService.generateTargetedWorkout({
+      languageId: "cpp",
+      targetWeakness: "Vector indexing boundaries",
+      conceptSlug: "loops",
+      difficulty: "medium",
+      userMasteryScore: 40,
+      recentMistakeTitles: ["Out of bounds access"],
+    });
+
+    assert.ok(workout.title.length > 5);
+    assert.ok(workout.starterCode.includes("std::vector"));
+    assert.ok(!workout.starterCode.includes("def "));
+    assert.ok(workout.solutionCode.includes("return"));
+    assert.ok(workout.visibleTestCases.length >= 1);
+  });
+
+  it("synthesizes a targeted JavaScript workout with authentic JS function syntax", async () => {
+    const workout = await WorkoutGeneratorService.generateTargetedWorkout({
+      languageId: "javascript",
+      targetWeakness: "Array indexing boundaries",
+      conceptSlug: "arrays",
+      difficulty: "easy",
+      userMasteryScore: 50,
+      recentMistakeTitles: ["TypeError undefined"],
+    });
+
+    assert.ok(workout.title.length > 5);
+    assert.ok(workout.starterCode.includes("function "));
+    assert.ok(!workout.starterCode.includes("def "));
+    assert.ok(workout.solutionCode.includes("return"));
+    assert.ok(workout.visibleTestCases.length >= 1);
   });
 
   it("validates generated workout object adheres to strict Zod schema", () => {
