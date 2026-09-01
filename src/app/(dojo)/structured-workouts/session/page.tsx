@@ -18,6 +18,8 @@ import {
   Layers,
   ChevronRight,
   Trophy,
+  Sparkles,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,11 +53,17 @@ function StructuredPracticeSessionContent() {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [code, setCode] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"tests" | "output">("tests");
+  const [activeTab, setActiveTab] = useState<"tests" | "output" | "hints">("tests");
   const [selectedTestCaseIndex, setSelectedTestCaseIndex] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  // Progressive Hint State
+  const [hintLevel, setHintLevel] = useState<number>(0);
+  const [aiHints, setAiHints] = useState<string[]>([]);
+  const [isHintLoading, setIsHintLoading] = useState<boolean>(false);
+  const [streamingHintText, setStreamingHintText] = useState<string>("");
 
   useEffect(() => {
     const timer = setInterval(() => setElapsedSeconds((prev) => prev + 1), 1000);
@@ -81,6 +89,8 @@ function StructuredPracticeSessionContent() {
         if (found) {
           setQueue([found]);
           setCode(found.starterCode);
+          setHintLevel(0);
+          setAiHints([]);
           setIsLoading(false);
           return;
         }
@@ -99,6 +109,8 @@ function StructuredPracticeSessionContent() {
       if (data.workouts && data.workouts.length > 0) {
         setQueue(data.workouts);
         setCode(data.workouts[0].starterCode);
+        setHintLevel(0);
+        setAiHints([]);
       }
     } catch (err) {
       console.error("Failed fetching session queue:", err);
@@ -229,11 +241,53 @@ function StructuredPracticeSessionContent() {
     }
   };
 
+  const handleUnlockHint = async () => {
+    if (!currentWorkout || isHintLoading) return;
+    const nextLevel = hintLevel + 1;
+    if (nextLevel > 3) return;
+
+    setIsHintLoading(true);
+    const baseHint = currentWorkout.hints && currentWorkout.hints[nextLevel - 1] ? currentWorkout.hints[nextLevel - 1] : "";
+    setStreamingHintText(baseHint || "Formulating progressive Sensei AI hint...");
+
+    try {
+      const res = await fetch("/api/ai/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          languageId: currentWorkout.languageId,
+          workoutId: currentWorkout.id,
+          workoutTitle: currentWorkout.title,
+          learningObjective: currentWorkout.problemStatement,
+          currentCode: code,
+          currentHintLevel: nextLevel,
+          previousHints: aiHints,
+          knownWeaknesses: currentWorkout.concepts,
+        }),
+      });
+
+      const data = await res.json();
+      const hintText = data.message || baseHint || "Focus on the loop boundary and termination condition.";
+
+      setAiHints((prev) => [...prev, hintText]);
+      setHintLevel(nextLevel);
+      setStreamingHintText("");
+    } catch {
+      setAiHints((prev) => [...prev, baseHint || "Review the example inputs and data types."]);
+      setHintLevel(nextLevel);
+      setStreamingHintText("");
+    } finally {
+      setIsHintLoading(false);
+    }
+  };
+
   const handleNextChallenge = () => {
     if (currentIndex < queue.length - 1) {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
       setCode(queue[nextIdx].starterCode);
+      setHintLevel(0);
+      setAiHints([]);
       setExecutionResult({
         status: "idle",
         passedTests: 0,
@@ -478,7 +532,7 @@ function StructuredPracticeSessionContent() {
             />
           </div>
 
-          {/* Interactive Test Results Drawer */}
+          {/* Interactive Test Results & Hints Drawer */}
           <div className="h-64 border-t-2 border-[#1E293B] bg-white flex flex-col text-[#1E293B] shrink-0">
             {/* Tab Header */}
             <div className="h-10 px-3 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between shrink-0 select-none">
@@ -507,6 +561,19 @@ function StructuredPracticeSessionContent() {
                 >
                   <Terminal className="h-3.5 w-3.5 stroke-[2.5]" />
                   <span>Terminal / Output</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("hints")}
+                  className={cn(
+                    "px-3 py-1 rounded-lg text-xs font-heading font-bold transition-all flex items-center gap-1.5",
+                    activeTab === "hints"
+                      ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
+                      : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B]"
+                  )}
+                >
+                  <Sparkles className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>Sensei Hints ({hintLevel}/3)</span>
                 </button>
               </div>
 
@@ -656,6 +723,65 @@ function StructuredPracticeSessionContent() {
                     <pre className="whitespace-pre-wrap text-[#1E293B] p-2 bg-white rounded-lg border border-[#EF4444]">
                       {executionResult.stderr || executionResult.stdout || "Assertion mismatch"}
                     </pre>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab 3: Sensei Progressive Hints */}
+            {activeTab === "hints" && (
+              <div className="flex-1 p-3.5 overflow-y-auto bg-[#FFFDF5] space-y-3 text-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-[#1E293B]/10">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-[#FBBF24]" />
+                    <span className="font-heading font-black text-xs text-[#1E293B]">
+                      Sensei Progressive Hints (Hint {hintLevel}/3)
+                    </span>
+                  </div>
+
+                  {hintLevel < 3 && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={handleUnlockHint}
+                      isLoading={isHintLoading}
+                      className="text-xs gap-1.5 shadow-[2px_2px_0_#1E293B]"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Unlock Hint {hintLevel + 1}</span>
+                    </Button>
+                  )}
+                </div>
+
+                {aiHints.length === 0 && !isHintLoading && (
+                  <div className="text-center py-6 text-[#64748B] space-y-2">
+                    <p className="font-medium">Need a hint without spoiling the answer?</p>
+                    <p className="text-[11px] text-[#94A3B8]">
+                      Unlock progressive hints: Hint 1 (Conceptual) → Hint 2 (Algorithm) → Hint 3 (Implementation).
+                    </p>
+                  </div>
+                )}
+
+                {aiHints.map((hint, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-xl border-2 border-[#1E293B] bg-white shadow-[2px_2px_0_#1E293B] space-y-1"
+                  >
+                    <div className="flex items-center gap-1.5 text-[10px] font-heading font-bold text-[#8B5CF6]">
+                      <Sparkles className="h-3 w-3" />
+                      <span>HINT {idx + 1}: {idx === 0 ? "CONCEPTUAL DIRECTION" : idx === 1 ? "ALGORITHMIC APPROACH" : "IMPLEMENTATION GUIDANCE"}</span>
+                    </div>
+                    <p className="font-medium text-[#1E293B] leading-relaxed">{hint}</p>
+                  </div>
+                ))}
+
+                {isHintLoading && streamingHintText && (
+                  <div className="p-3 rounded-xl border-2 border-dashed border-[#8B5CF6] bg-white space-y-1">
+                    <div className="flex items-center gap-1.5 text-[10px] font-heading font-bold text-[#8B5CF6]">
+                      <Sparkles className="h-3 w-3 animate-spin" />
+                      <span>CONSULTING DEEPSEEK SENSEI...</span>
+                    </div>
+                    <p className="font-medium text-[#64748B] italic">{streamingHintText}</p>
                   </div>
                 )}
               </div>

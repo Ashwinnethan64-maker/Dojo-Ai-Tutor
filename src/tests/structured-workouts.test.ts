@@ -3,6 +3,7 @@ import assert from "node:assert";
 import { StructuredWorkoutService } from "../lib/structured-workouts/service";
 import { StructuredShuffleEngine } from "../lib/structured-workouts/shuffle-engine";
 import { IsolatedExecutionService } from "../lib/execution/service";
+import { SemanticEvaluatorService } from "../lib/ai/evaluator";
 
 describe("Structured Workouts Track & Shuffle Engine", () => {
   it("initializes four-language structured problem bank with active contracts", () => {
@@ -88,5 +89,39 @@ describe("Structured Workouts Track & Shuffle Engine", () => {
 
     assert.strictEqual(res.status, "Accepted");
     assert.strictEqual(res.passedTests, pyWorkout.visibleTestCases.length + pyWorkout.hiddenTestCases.length);
+  });
+
+  it("evaluates wrong user code and genuinely marks it as failed", async () => {
+    const all = StructuredWorkoutService.getAllWorkouts();
+    const pyWorkout = all.find((w) => w.languageId === "python" && w.slug === "py-first-unique-char");
+    assert.ok(pyWorkout);
+
+    // Intentionally wrong stub
+    const wrongCode = "def first_unique_char(s):\n    return 'WRONG_RESULT'\n";
+    const res = await IsolatedExecutionService.executeCode(
+      wrongCode,
+      "python",
+      "",
+      pyWorkout.id
+    );
+
+    assert.strictEqual(res.status, "Wrong Answer");
+    assert.strictEqual(res.passedTests, 0);
+  });
+
+  it("performs semantic evaluation on mismatch without blindly passing wrong logic", async () => {
+    const evalResult = await SemanticEvaluatorService.evaluateMismatch({
+      languageId: "python",
+      workoutTitle: "First Non-Repeating Character",
+      problemStatement: "Return first non-repeating character",
+      functionContract: "first_unique_char('aabb')",
+      stdin: "first_unique_char('aabb')",
+      expectedOutput: "",
+      actualOutput: "a",
+      userCode: "def first_unique_char(s):\n    return s[0]\n",
+    });
+
+    assert.strictEqual(evalResult.isEquivalent, false);
+    assert.strictEqual(evalResult.classification, "genuinely_incorrect_logic");
   });
 });

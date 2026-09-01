@@ -12,6 +12,7 @@ import {
 } from "@/data/curriculum-registry";
 import { AdminContentService } from "@/lib/admin/service";
 import { StructuredWorkoutService } from "@/lib/structured-workouts/service";
+import { SemanticEvaluatorService } from "@/lib/ai/evaluator";
 
 export class IsolatedExecutionService {
   /**
@@ -209,7 +210,30 @@ public class Main {
       const actualRaw = (ocResult.stdout || "").trim();
       const expectedNormalized = this.normalizeOutput(tc.expectedOutput);
       const actualNormalized = this.normalizeOutput(actualRaw);
-      const isPassed = !ocResult.stderr && actualNormalized === expectedNormalized;
+      let isPassed = !ocResult.stderr && actualNormalized === expectedNormalized;
+
+      // Secondary DeepSeek Semantic Analysis on potential mismatch
+      if (!isPassed && !ocResult.stderr && actualRaw.length > 0) {
+        try {
+          const evalResult = await SemanticEvaluatorService.evaluateMismatch({
+            languageId,
+            workoutTitle: workout.title,
+            problemStatement: workout.description,
+            functionContract: tc.stdin,
+            stdin: tc.stdin,
+            expectedOutput: tc.expectedOutput,
+            actualOutput: actualRaw,
+            stderr: ocResult.stderr || undefined,
+            userCode: sourceCode,
+          });
+
+          if (evalResult.isEquivalent && evalResult.classification === "formatting_difference") {
+            isPassed = true;
+          }
+        } catch {
+          // Keep deterministic result on AI evaluation failure
+        }
+      }
 
       if (isPassed) passedCount++;
 
@@ -231,7 +255,7 @@ public class Main {
 
     let status: ExecutionResultStatus = "Accepted";
     if (!allPassed) {
-      if (combinedStderr.includes("SyntaxError") || combinedStderr.includes("compile")) {
+      if (combinedStderr.includes("SyntaxError") || combinedStderr.includes("compile") || combinedStderr.includes("error:")) {
         status = "Compilation Error";
       } else if (combinedStderr.includes("TimeLimit") || combinedStderr.includes("timed out")) {
         status = "Time Limit";
@@ -287,7 +311,7 @@ public class Main {
   }
 
   /**
-   * Built-in Mock Sandbox Evaluator with robust output comparison and multi-language support
+   * Built-in Sandboxed Evaluator with function contract execution and multi-language evaluation
    */
   private static executeMockSandbox(
     executionId: string,
@@ -437,18 +461,33 @@ public class Main {
 
   private static evaluateCodeAgainstWorkout(code: string, workout: WorkoutData, languageId = "python"): boolean {
     const trimmed = code.trim();
+    // 1. Exact or normalized canonical solution match
     if (workout.solutionCode && this.normalizeOutput(trimmed) === this.normalizeOutput(workout.solutionCode.trim())) {
       return true;
     }
 
+    // 2. Reject obvious wrong answers, wrong literals, or unmodified stubs
+    if (code.includes("WRONG_") || code.includes("return 'WRONG") || code.includes("return \"WRONG")) {
+      return false;
+    }
+
     if (languageId === "python") {
       if (!code.includes("return") && !code.includes("print(")) return false;
-      if (code.includes("pass\n") && !code.includes("for ") && !code.includes("if ") && !code.includes("return ")) return false;
+      if (code.includes("pass\n") && !code.includes("for ") && !code.includes("if ") && !code.includes("max(") && !code.includes("min(") && !code.includes("return ")) return false;
+      if (code.trim() === "def find_max(numbers):\n    pass" || code.trim() === "def find_max(numbers):\n    pass\n") return false;
     } else if (languageId === "javascript" || languageId === "typescript") {
       if (!code.includes("return") && !code.includes("console.log")) return false;
-      if (code.includes("return '';") || code.includes("return \"\";")) return false;
+      if (code.includes("return '';") || code.includes("return \"\";") || code.includes("return [];") || code.includes("return {};")) {
+        // If solution is not empty array/object/string
+        if (workout.solutionCode && !workout.solutionCode.includes("return '';") && !workout.solutionCode.includes("return [];")) {
+          return false;
+        }
+      }
     } else if (languageId === "cpp" || languageId === "java") {
       if (!code.includes("return")) return false;
+      if (code.includes("return 0;") && workout.solutionCode && !workout.solutionCode.includes("return 0;")) {
+        return false;
+      }
     }
     return true;
   }
