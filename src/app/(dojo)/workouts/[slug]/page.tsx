@@ -20,7 +20,7 @@ import Editor from "@monaco-editor/react";
 import { WorkoutData } from "@/data/python-curriculum";
 import { GeometricDecoration } from "@/components/dojo/geometric-decoration";
 import { useLanguage } from "@/contexts/language-context";
-import { useTheme } from "@/contexts/theme-context";
+import { useEditorTheme } from "@/contexts/theme-context";
 import { getCurriculumForLanguage } from "@/data/curriculum-registry";
 
 export default function DynamicWorkoutWorkspace({
@@ -30,7 +30,7 @@ export default function DynamicWorkoutWorkspace({
 }) {
   const resolvedParams = use(params);
   const { activeLanguage, activeLanguageId } = useLanguage();
-  const { editorTheme } = useTheme();
+  const { editorTheme } = useEditorTheme();
 
   const topics = getCurriculumForLanguage(activeLanguageId);
 
@@ -233,7 +233,7 @@ export default function DynamicWorkoutWorkspace({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7rem)] overflow-hidden space-y-4 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:h-[calc(100vh-7rem)] lg:overflow-hidden space-y-4 max-w-7xl mx-auto pb-12 lg:pb-0">
       {/* 1. Workout Workspace Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] shrink-0">
         <div className="flex items-center gap-3">
@@ -281,10 +281,10 @@ export default function DynamicWorkoutWorkspace({
         </div>
       </div>
 
-      {/* 2. Main 3-Column Workspace Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 overflow-hidden">
+      {/* 2. Main Workspace Layout: 3 Columns on Desktop, Stacked on Mobile/Tablet */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 lg:overflow-hidden">
         {/* Left Column: Problem Statement & Instructions */}
-        <div className="lg:col-span-4 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] overflow-hidden">
+        <div className="lg:col-span-4 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] overflow-hidden max-h-[400px] lg:max-h-none">
           <div className="p-4 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-[#8B5CF6] stroke-[2.5]" />
@@ -343,7 +343,7 @@ export default function DynamicWorkoutWorkspace({
         </div>
 
         {/* Center Column: Monaco Editor + Output Drawer */}
-        <div className="lg:col-span-5 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-[#1E1E1E] shadow-[4px_4px_0_#1E293B] overflow-hidden">
+        <div className="lg:col-span-5 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-[#1E1E1E] shadow-[4px_4px_0_#1E293B] overflow-hidden min-h-[420px] lg:min-h-0">
           {/* Editor Header */}
           <div className="h-10 bg-[#252526] px-4 border-b border-[#333333] flex items-center justify-between text-xs text-[#CCCCCC] select-none">
             <span className="font-mono font-medium">{activeLanguage.defaultFilename}</span>
@@ -413,7 +413,7 @@ export default function DynamicWorkoutWorkspace({
         </div>
 
         {/* Right Column: DOJO AI Sensei Tutor & Progressive Hints */}
-        <div className="lg:col-span-3 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] overflow-hidden">
+        <div className="lg:col-span-3 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] overflow-hidden min-h-[300px] lg:min-h-0">
           <div className="p-4 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-lg bg-[#8B5CF6] text-white flex items-center justify-center font-heading font-black text-xs border border-[#1E293B]">

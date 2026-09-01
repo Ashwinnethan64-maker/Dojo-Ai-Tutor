@@ -2,32 +2,22 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type AppTheme = "light" | "dark";
 export type MonacoTheme = "vs-dark" | "light";
 
-interface ThemeContextType {
-  theme: AppTheme;
-  setTheme: (theme: AppTheme) => void;
+interface EditorThemeContextType {
   editorTheme: MonacoTheme;
   setEditorTheme: (theme: MonacoTheme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const EditorThemeContext = createContext<EditorThemeContextType | undefined>(undefined);
 
-const THEME_STORAGE_KEY = "dojo_app_theme";
 const EDITOR_THEME_STORAGE_KEY = "dojo_editor_theme";
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<AppTheme>("light");
+export function EditorThemeProvider({ children }: { children: React.ReactNode }) {
   const [editorTheme, setEditorThemeState] = useState<MonacoTheme>("vs-dark");
 
   useEffect(() => {
     try {
-      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as AppTheme | null;
-      if (storedTheme === "dark" || storedTheme === "light") {
-        setThemeState(storedTheme);
-        document.documentElement.classList.toggle("dark", storedTheme === "dark");
-      }
       const storedEditorTheme = localStorage.getItem(EDITOR_THEME_STORAGE_KEY) as MonacoTheme | null;
       if (storedEditorTheme === "light" || storedEditorTheme === "vs-dark") {
         setEditorThemeState(storedEditorTheme);
@@ -36,16 +26,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // safe fallback
     }
   }, []);
-
-  const setTheme = (newTheme: AppTheme) => {
-    setThemeState(newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    } catch {
-      // safe fallback
-    }
-  };
 
   const setEditorTheme = (newEditorTheme: MonacoTheme) => {
     setEditorThemeState(newEditorTheme);
@@ -57,18 +37,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, editorTheme, setEditorTheme }}>
+    <EditorThemeContext.Provider value={{ editorTheme, setEditorTheme }}>
       {children}
-    </ThemeContext.Provider>
+    </EditorThemeContext.Provider>
   );
 }
 
-export function useTheme() {
-  const context = useContext(ThemeContext);
+export function useEditorTheme() {
+  const context = useContext(EditorThemeContext);
   if (!context) {
     return {
-      theme: "light" as AppTheme,
-      setTheme: () => {},
       editorTheme: "vs-dark" as MonacoTheme,
       setEditorTheme: () => {},
     };
