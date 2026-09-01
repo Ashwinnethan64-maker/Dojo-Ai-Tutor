@@ -1,4 +1,8 @@
-import { ExecutionResultResponse, ExecutionResultStatus } from "./types";
+import { OneCompilerService, OneCompilerRunResponse } from "./onecompiler";
+import {
+  ExecutionResultResponse,
+  ExecutionResultStatus,
+} from "./types";
 import { PYTHON_TOPICS, WorkoutData } from "@/data/python-curriculum";
 import {
   JAVASCRIPT_TOPICS,
@@ -6,12 +10,11 @@ import {
   CPP_TOPICS,
   JAVA_TOPICS,
 } from "@/data/curriculum-registry";
-import { OneCompilerService, OneCompilerRunResponse } from "./onecompiler";
+import { AdminContentService } from "@/lib/admin/service";
 
 export class IsolatedExecutionService {
   /**
-   * Dispatches code to OneCompiler remote sandboxed execution API.
-   * Seamlessly falls back to local sandboxed runner if OneCompiler is offline or unconfigured.
+   * Universal language-aware execution handler.
    */
   public static async executeCode(
     sourceCode: string,
@@ -21,28 +24,34 @@ export class IsolatedExecutionService {
   ): Promise<ExecutionResultResponse> {
     const executionId = `exec-${Math.random().toString(36).substring(2, 9)}`;
 
-    // 1. Resolve workout across all language curriculums
+    // 1. Resolve workout across curriculum registries and AdminContentService
     let workout: WorkoutData | undefined;
     if (workoutId) {
-      const allTopicGroups = [
-        PYTHON_TOPICS,
-        JAVASCRIPT_TOPICS,
-        TYPESCRIPT_TOPICS,
-        CPP_TOPICS,
-        JAVA_TOPICS,
-      ];
+      // First check AdminContentService (covers AI-generated and admin-modified workouts)
+      const adminFound = AdminContentService.getWorkoutById(workoutId);
+      if (adminFound) {
+        workout = adminFound;
+      } else {
+        const allTopicGroups = [
+          PYTHON_TOPICS,
+          JAVASCRIPT_TOPICS,
+          TYPESCRIPT_TOPICS,
+          CPP_TOPICS,
+          JAVA_TOPICS,
+        ];
 
-      for (const group of allTopicGroups) {
-        for (const topic of group) {
-          const found = topic.workouts.find(
-            (w) => w.id === workoutId || w.slug === workoutId
-          );
-          if (found) {
-            workout = found;
-            break;
+        for (const group of allTopicGroups) {
+          for (const topic of group) {
+            const found = topic.workouts.find(
+              (w) => w.id === workoutId || w.slug === workoutId
+            );
+            if (found) {
+              workout = found;
+              break;
+            }
           }
+          if (workout) break;
         }
-        if (workout) break;
       }
     }
 
@@ -51,7 +60,7 @@ export class IsolatedExecutionService {
         process.env.ONECOMPILER_API_KEY !== "your-onecompiler-api-key"
     );
 
-    // 2. If OneCompiler Key is provided and workout is NOT a curriculum mock-test, execute via OneCompiler
+    // 2. If OneCompiler Key is provided and workout is NOT provided (raw playground execution)
     if (hasOneCompilerKey && !workout) {
       try {
         const ocResult = await OneCompilerService.execute(
@@ -65,7 +74,7 @@ export class IsolatedExecutionService {
       }
     }
 
-    // 3. If workout test cases exist, run them through OneCompiler or mock evaluation
+    // 3. If workout test cases exist, execute through multi-test runner
     if (hasOneCompilerKey && workout) {
       try {
         return await this.executeWorkoutViaOneCompiler(
@@ -84,7 +93,7 @@ export class IsolatedExecutionService {
   }
 
   /**
-   * Evaluates workout test cases using OneCompiler
+   * Evaluates workout test cases using language-native test harnesses
    */
   private static async executeWorkoutViaOneCompiler(
     executionId: string,
@@ -93,8 +102,8 @@ export class IsolatedExecutionService {
     workout: WorkoutData
   ): Promise<ExecutionResultResponse> {
     const allTests = [
-      ...workout.visibleTestCases.map((tc) => ({ ...tc, isHidden: false })),
-      ...workout.hiddenTestCases.map((tc) => ({ ...tc, isHidden: true })),
+      ...workout.visibleTestCases.map((tc: { stdin: string; expectedOutput: string }) => ({ ...tc, isHidden: false })),
+      ...workout.hiddenTestCases.map((tc: { stdin: string; expectedOutput: string }) => ({ ...tc, isHidden: true })),
     ];
 
     let passedCount = 0;
@@ -106,17 +115,22 @@ export class IsolatedExecutionService {
     for (let i = 0; i < allTests.length; i++) {
       const tc = allTests[i];
 
-      // Build language-specific test harness
+      // Build language-specific test harness with safe assertion printing
       let testHarness = sourceCode;
       if (languageId === "python") {
         testHarness = `
 ${sourceCode}
 
+import sys
+
 try:
     result = ${tc.stdin}
-    print(result)
+    # Print result representation
+    if isinstance(result, str):
+        print(result)
+    else:
+        print(repr(result))
 except Exception as e:
-    import sys
     sys.stderr.write(str(e) + "\\n")
 `;
       } else if (languageId === "javascript" || languageId === "typescript") {
@@ -125,9 +139,27 @@ ${sourceCode}
 
 try {
     const result = ${tc.stdin};
-    console.log(result);
+    if (typeof result === "object") {
+        console.log(JSON.stringify(result));
+    } else {
+        console.log(result);
+    }
 } catch (e) {
     console.error(e.message || e);
+}
+`;
+      } else if (languageId === "cpp") {
+        testHarness = `
+#include <iostream>
+#include <vector>
+#include <string>
+
+${sourceCode}
+
+int main() {
+    auto res = ${tc.stdin};
+    std::cout << res << std::endl;
+    return 0;
 }
 `;
       }
@@ -277,8 +309,8 @@ try {
     // Evaluate Workout Test Cases
     if (workout) {
       const allTests = [
-        ...workout.visibleTestCases.map((tc) => ({ ...tc, isHidden: false })),
-        ...workout.hiddenTestCases.map((tc) => ({ ...tc, isHidden: true })),
+        ...workout.visibleTestCases.map((tc: { stdin: string; expectedOutput: string }) => ({ ...tc, isHidden: false })),
+        ...workout.hiddenTestCases.map((tc: { stdin: string; expectedOutput: string }) => ({ ...tc, isHidden: true })),
       ];
 
       const testResults = [];
@@ -338,7 +370,9 @@ try {
     return output
       .replace(/\r\n/g, "\n")
       .trim()
-      .replace(/['"]/g, '"');
+      .replace(/['"]/g, '"')
+      .replace(/\s*,\s*/g, ", ")
+      .replace(/\s*:\s*/g, ": ");
   }
 
   private static detectSyntaxError(code: string, languageId = "python"): string | null {
