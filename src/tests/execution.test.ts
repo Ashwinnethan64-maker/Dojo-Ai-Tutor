@@ -18,6 +18,27 @@ describe("Isolated Code Execution Engine", () => {
     assert.ok(result.passedTests > 0);
   });
 
+  it("validates Python float return normalization (to_fahrenheit 32 vs 32.0)", async () => {
+    const validCode = "def to_fahrenheit(celsius):\n    return (celsius * 9 / 5) + 32\n";
+    const result = await IsolatedExecutionService.executeCode(
+      validCode,
+      "python",
+      "",
+      "celsius-to-fahrenheit"
+    );
+
+    assert.strictEqual(result.status, "Accepted");
+    assert.strictEqual(result.passedTests, result.totalTests);
+  });
+
+  it("validates Python numeric and string comparator rules", () => {
+    assert.ok(IsolatedExecutionService.compareOutputs("32", "32.0"));
+    assert.ok(IsolatedExecutionService.compareOutputs("32.000", "32"));
+    assert.ok(IsolatedExecutionService.compareOutputs("[2, 4, 6]", "[2,4,6]"));
+    assert.ok(IsolatedExecutionService.compareOutputs("  'Hello'  ", '"Hello"'));
+    assert.strictEqual(IsolatedExecutionService.compareOutputs("33", "32.0"), false);
+  });
+
   it("detects syntax errors and returns Compilation Error status", async () => {
     const syntaxErrorCode = "def broken(\n    return 1";
     const result = await IsolatedExecutionService.executeCode(syntaxErrorCode, "python");

@@ -12,14 +12,22 @@ import {
 } from "@/data/curriculum-registry";
 import { AdminContentService } from "@/lib/admin/service";
 import { StructuredWorkoutService } from "@/lib/structured-workouts/service";
-import { SemanticEvaluatorService } from "@/lib/ai/evaluator";
 
 import * as vm from "node:vm";
-import { spawnSync } from "node:child_process";
+
+export type ExecutionMode = "FUNCTION" | "STDIN_STDOUT";
+
+export interface StandardTestCase {
+  stdin: string;
+  expectedOutput: string;
+  isHidden?: boolean;
+  executionMode?: ExecutionMode;
+}
 
 export class IsolatedExecutionService {
   /**
    * Universal language-aware execution handler.
+   * Single source of truth for Run Code, Run Tests, and Admin Verify Canonical.
    */
   public static async executeCode(
     sourceCode: string,
@@ -126,7 +134,7 @@ export class IsolatedExecutionService {
     languageId: string,
     workout: WorkoutData
   ): Promise<ExecutionResultResponse> {
-    const allTests = [
+    const allTests: StandardTestCase[] = [
       ...workout.visibleTestCases.map((tc: { stdin: string; expectedOutput: string }) => ({ ...tc, isHidden: false })),
       ...workout.hiddenTestCases.map((tc: { stdin: string; expectedOutput: string }) => ({ ...tc, isHidden: true })),
     ];
@@ -139,11 +147,15 @@ export class IsolatedExecutionService {
 
     for (let i = 0; i < allTests.length; i++) {
       const tc = allTests[i];
+      const isFunctionMode = this.detectExecutionMode(tc.stdin, sourceCode, languageId) === "FUNCTION";
 
-      // Build language-specific test harness with safe assertion printing
       let testHarness = sourceCode;
-      if (languageId === "python") {
-        testHarness = `
+      let runtimeStdin = "";
+
+      if (isFunctionMode) {
+        // Function Return Harness for each language
+        if (languageId === "python") {
+          testHarness = `
 ${sourceCode}
 
 import sys, json
@@ -164,13 +176,13 @@ try:
 except Exception as e:
     sys.stderr.write(str(e) + "\\n")
 `;
-      } else if (languageId === "javascript" || languageId === "typescript") {
-        testHarness = `
+        } else if (languageId === "javascript" || languageId === "typescript") {
+          testHarness = `
 ${sourceCode}
 
 try {
     const result = ${tc.stdin};
-    if (typeof result === "object") {
+    if (typeof result === "object" && result !== null) {
         console.log(JSON.stringify(result));
     } else {
         console.log(result);
@@ -179,8 +191,8 @@ try {
     console.error(e.message || e);
 }
 `;
-      } else if (languageId === "cpp") {
-        testHarness = `
+        } else if (languageId === "cpp") {
+          testHarness = `
 #include <iostream>
 #include <vector>
 #include <string>
@@ -193,8 +205,8 @@ int main() {
     return 0;
 }
 `;
-      } else if (languageId === "java") {
-        testHarness = `
+        } else if (languageId === "java") {
+          testHarness = `
 ${sourceCode}
 
 public class Main {
@@ -208,40 +220,22 @@ public class Main {
     }
 }
 `;
+        }
+      } else {
+        // STDIN_STDOUT Mode: raw source code with stdin injected
+        testHarness = sourceCode;
+        runtimeStdin = tc.stdin;
       }
 
       let ocResult: OneCompilerRunResponse;
       try {
-        ocResult = await OneCompilerService.execute(testHarness, languageId, "");
+        ocResult = await OneCompilerService.execute(testHarness, languageId, runtimeStdin);
       } catch (err: any) {
         ocResult = { status: "failed", stderr: err.message || "Execution failed" };
       }
 
       const actualRaw = (ocResult.stdout || "").trim();
-      let isPassed = !ocResult.stderr && this.compareOutputs(actualRaw, tc.expectedOutput);
-
-      // DeepSeek AI Semantic Evaluation if OneCompiler output differed
-      if (!isPassed && workout) {
-        try {
-          const evalResult = await SemanticEvaluatorService.evaluateMismatch({
-            languageId,
-            workoutTitle: workout.title,
-            problemStatement: workout.description,
-            functionContract: tc.stdin,
-            stdin: tc.stdin,
-            expectedOutput: tc.expectedOutput,
-            actualOutput: actualRaw || (ocResult.stderr ? `Error: ${ocResult.stderr.trim()}` : "None"),
-            stderr: ocResult.stderr || undefined,
-            userCode: sourceCode,
-          });
-
-          if (evalResult.isEquivalent && (evalResult.classification === "formatting_difference" || evalResult.classification === "contract_mismatch")) {
-            isPassed = true;
-          }
-        } catch {
-          // keep deterministic
-        }
-      }
+      const isPassed = !ocResult.stderr && this.compareOutputs(actualRaw, tc.expectedOutput);
 
       if (isPassed) passedCount++;
 
@@ -249,9 +243,9 @@ public class Main {
         testIndex: i + 1,
         stdin: tc.stdin,
         expectedOutput: tc.expectedOutput,
-        actualOutput: isPassed ? (actualRaw || tc.expectedOutput) : (actualRaw || (ocResult.stderr ? `Error: ${ocResult.stderr.trim()}` : "None")),
+        actualOutput: actualRaw || (ocResult.stderr ? `Error: ${ocResult.stderr.trim()}` : "None"),
         passed: isPassed,
-        isHidden: tc.isHidden,
+        isHidden: tc.isHidden || false,
       });
 
       if (ocResult.stdout) combinedStdout += `[Test ${i + 1}] ${ocResult.stdout}\n`;
@@ -320,7 +314,7 @@ public class Main {
 
   /**
    * Real Sandboxed Evaluator:
-   * Executes JavaScript/Python/C++/Java logic with DeepSeek AI semantic fallback.
+   * Deterministic local VM & AST sandbox runner supporting both FUNCTION and STDIN_STDOUT modes.
    */
   private static async executeRealLocalSandbox(
     executionId: string,
@@ -430,28 +424,6 @@ public class Main {
           isPassed = isMatch;
         }
 
-        // Secondary DeepSeek Semantic Analysis if local evaluation differed
-        if (!isPassed) {
-          try {
-            const evalResult = await SemanticEvaluatorService.evaluateMismatch({
-              languageId,
-              workoutTitle: workout.title,
-              problemStatement: workout.description,
-              functionContract: tc.stdin,
-              stdin: tc.stdin,
-              expectedOutput: tc.expectedOutput,
-              actualOutput,
-              userCode: sourceCode,
-            });
-            if (evalResult.isEquivalent && (evalResult.classification === "formatting_difference" || evalResult.classification === "contract_mismatch")) {
-              isPassed = true;
-              actualOutput = tc.expectedOutput;
-            }
-          } catch {
-            // keep deterministic
-          }
-        }
-
         if (isPassed) {
           passedCount++;
         } else if (!firstFailureMessage) {
@@ -502,13 +474,25 @@ public class Main {
     };
   }
 
+  /**
+   * Deterministic Output Comparator
+   */
   public static compareOutputs(actual: string, expected: string): boolean {
     const actNorm = this.normalizeOutput(actual);
     const expNorm = this.normalizeOutput(expected);
 
     if (actNorm === expNorm) return true;
 
-    // Check JSON parsed structural equality (for arrays, objects, maps)
+    // 1. Numeric normalization (e.g. 32 vs 32.0 vs 32.000)
+    const actNum = Number(actNorm);
+    const expNum = Number(expNorm);
+    if (!isNaN(actNum) && !isNaN(expNum) && actNorm !== "" && expNorm !== "") {
+      if (Math.abs(actNum - expNum) < 1e-6) {
+        return true;
+      }
+    }
+
+    // 2. Check JSON parsed structural equality (for arrays, objects, maps)
     try {
       const actObj = JSON.parse(actNorm);
       const expObj = JSON.parse(expNorm);
@@ -520,6 +504,25 @@ public class Main {
     }
 
     return false;
+  }
+
+  public static detectExecutionMode(stdin: string, sourceCode: string, languageId: string): ExecutionMode {
+    const trimmedStdin = (stdin || "").trim();
+    // If stdin looks like a function call (e.g. "func(args)" or "to_fahrenheit(0)")
+    if (trimmedStdin.includes("(") && trimmedStdin.endsWith(")")) {
+      return "FUNCTION";
+    }
+    // If sourceCode has input() or Scanner or cin and stdin does not contain parentheses
+    if (
+      sourceCode.includes("input(") ||
+      sourceCode.includes("Scanner") ||
+      sourceCode.includes("cin >>") ||
+      sourceCode.includes("process.stdin") ||
+      sourceCode.includes("readFileSync(0")
+    ) {
+      return "STDIN_STDOUT";
+    }
+    return "FUNCTION";
   }
 
   private static deepEqual(a: any, b: any): boolean {
