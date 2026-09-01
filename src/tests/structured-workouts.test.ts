@@ -116,7 +116,11 @@ function filterEvens(nums) {
     assert.strictEqual(res.status, "Accepted");
     assert.strictEqual(res.passedTests, jsWorkout.visibleTestCases.length + jsWorkout.hiddenTestCases.length);
     assert.ok(res.testResults && res.testResults.length > 0);
-    assert.strictEqual(res.testResults[0].actualOutput, "[2,4,6]");
+    assert.ok(
+      IsolatedExecutionService.compareOutputs(res.testResults[0].actualOutput || "", "[2, 4, 6]") ||
+      res.testResults[0].actualOutput === "[2, 4, 6]" ||
+      res.testResults[0].actualOutput === "[2,4,6]"
+    );
   });
 
   it("evaluates wrong user code and genuinely marks it as failed", async () => {

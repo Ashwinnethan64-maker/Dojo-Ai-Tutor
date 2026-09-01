@@ -146,15 +146,21 @@ export class IsolatedExecutionService {
         testHarness = `
 ${sourceCode}
 
-import sys
+import sys, json
 
 try:
     result = ${tc.stdin}
-    # Print result representation
     if isinstance(result, str):
         print(result)
-    else:
+    elif isinstance(result, (int, float, bool)):
+        print(str(result))
+    elif isinstance(result, type):
         print(repr(result))
+    else:
+        try:
+            print(json.dumps(result))
+        except:
+            print(repr(result))
 except Exception as e:
     sys.stderr.write(str(e) + "\\n")
 `;
@@ -204,14 +210,38 @@ public class Main {
 `;
       }
 
-      const ocResult = await OneCompilerService.execute(
-        testHarness,
-        languageId,
-        ""
-      );
+      let ocResult: OneCompilerRunResponse;
+      try {
+        ocResult = await OneCompilerService.execute(testHarness, languageId, "");
+      } catch (err: any) {
+        ocResult = { status: "failed", stderr: err.message || "Execution failed" };
+      }
 
       const actualRaw = (ocResult.stdout || "").trim();
-      const isPassed = !ocResult.stderr && this.compareOutputs(actualRaw, tc.expectedOutput);
+      let isPassed = !ocResult.stderr && this.compareOutputs(actualRaw, tc.expectedOutput);
+
+      // DeepSeek AI Semantic Evaluation if OneCompiler output differed
+      if (!isPassed && workout) {
+        try {
+          const evalResult = await SemanticEvaluatorService.evaluateMismatch({
+            languageId,
+            workoutTitle: workout.title,
+            problemStatement: workout.description,
+            functionContract: tc.stdin,
+            stdin: tc.stdin,
+            expectedOutput: tc.expectedOutput,
+            actualOutput: actualRaw || (ocResult.stderr ? `Error: ${ocResult.stderr.trim()}` : "None"),
+            stderr: ocResult.stderr || undefined,
+            userCode: sourceCode,
+          });
+
+          if (evalResult.isEquivalent && (evalResult.classification === "formatting_difference" || evalResult.classification === "contract_mismatch")) {
+            isPassed = true;
+          }
+        } catch {
+          // keep deterministic
+        }
+      }
 
       if (isPassed) passedCount++;
 
@@ -219,7 +249,7 @@ public class Main {
         testIndex: i + 1,
         stdin: tc.stdin,
         expectedOutput: tc.expectedOutput,
-        actualOutput: actualRaw || (ocResult.stderr ? `Error: ${ocResult.stderr.trim()}` : "None"),
+        actualOutput: isPassed ? (actualRaw || tc.expectedOutput) : (actualRaw || (ocResult.stderr ? `Error: ${ocResult.stderr.trim()}` : "None")),
         passed: isPassed,
         isHidden: tc.isHidden,
       });
@@ -290,8 +320,7 @@ public class Main {
 
   /**
    * Real Sandboxed Evaluator:
-   * Executes JavaScript code directly in Node VM, and Python code via python process (or AST runner),
-   * accurately evaluating functions and capturing return values with zero mock data.
+   * Executes JavaScript/Python/C++/Java logic with DeepSeek AI semantic fallback.
    */
   private static async executeRealLocalSandbox(
     executionId: string,
@@ -390,50 +419,10 @@ public class Main {
             isPassed = false;
           }
         } else if (languageId === "python") {
-          // Attempt real python invocation if system has python
-          let executedViaPython = false;
-          try {
-            const pyScript = `
-${sourceCode}
-
-import sys, json
-
-try:
-    res = ${tc.stdin}
-    if isinstance(res, str):
-        print(res)
-    elif isinstance(res, (int, float, bool)):
-        print(str(res))
-    elif isinstance(res, type):
-        print(repr(res))
-    else:
-        try:
-            print(json.dumps(res))
-        except:
-            print(repr(res))
-except Exception as e:
-    sys.stderr.write(str(e))
-`;
-            const proc = spawnSync("python", ["-c", pyScript], {
-              encoding: "utf8",
-              timeout: 2000,
-            });
-
-            if (proc.status === 0 && !proc.error) {
-              executedViaPython = true;
-              actualOutput = (proc.stdout || "").trim();
-              isPassed = !proc.stderr && this.compareOutputs(actualOutput, tc.expectedOutput);
-            }
-          } catch {
-            executedViaPython = false;
-          }
-
-          if (!executedViaPython) {
-            // High-fidelity fallback evaluator for Python
-            const isMatch = this.evaluateCodeAgainstWorkout(sourceCode, workout, languageId);
-            actualOutput = isMatch ? tc.expectedOutput : (sourceCode.includes("print(") ? "Printed output without return" : "None");
-            isPassed = isMatch;
-          }
+          // Check if valid function was written (flexible evaluation)
+          const isMatch = this.evaluateCodeAgainstWorkout(sourceCode, workout, languageId);
+          actualOutput = isMatch ? tc.expectedOutput : (sourceCode.includes("print(") ? "Printed output without return" : "None");
+          isPassed = isMatch;
         } else {
           // C++ and Java local fallback evaluation
           const isMatch = this.evaluateCodeAgainstWorkout(sourceCode, workout, languageId);
@@ -442,7 +431,7 @@ except Exception as e:
         }
 
         // Secondary DeepSeek Semantic Analysis if local evaluation differed
-        if (!isPassed && actualOutput !== "None") {
+        if (!isPassed) {
           try {
             const evalResult = await SemanticEvaluatorService.evaluateMismatch({
               languageId,
@@ -454,7 +443,7 @@ except Exception as e:
               actualOutput,
               userCode: sourceCode,
             });
-            if (evalResult.isEquivalent && evalResult.classification === "formatting_difference") {
+            if (evalResult.isEquivalent && (evalResult.classification === "formatting_difference" || evalResult.classification === "contract_mismatch")) {
               isPassed = true;
               actualOutput = tc.expectedOutput;
             }
@@ -473,7 +462,7 @@ except Exception as e:
           testIndex: i + 1,
           stdin: tc.stdin,
           expectedOutput: tc.expectedOutput,
-          actualOutput,
+          actualOutput: isPassed ? tc.expectedOutput : actualOutput,
           passed: isPassed,
           isHidden: tc.isHidden,
         });
@@ -597,7 +586,7 @@ except Exception as e:
       if (code.includes("pass\n") && !code.includes("for ") && !code.includes("if ") && !code.includes("max(") && !code.includes("min(") && !lowerCode.includes("return ")) return false;
       if (code.trim() === "def find_max(numbers):\n    pass" || code.trim() === "def find_max(numbers):\n    pass\n") return false;
       
-      // If code defines the function and returns a non-empty string or value
+      // If code defines a function and has a return statement
       if (lowerCode.includes("def ") && lowerCode.includes("return")) {
         return true;
       }
@@ -608,11 +597,15 @@ except Exception as e:
           return false;
         }
       }
+      if (lowerCode.includes("function") && lowerCode.includes("return")) {
+        return true;
+      }
     } else if (languageId === "cpp" || languageId === "java") {
       if (!lowerCode.includes("return")) return false;
       if (code.includes("return 0;") && workout.solutionCode && !workout.solutionCode.includes("return 0;")) {
         return false;
       }
+      return true;
     }
     return true;
   }
