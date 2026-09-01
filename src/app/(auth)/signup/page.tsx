@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthCallbackUrl } from "@/lib/supabase/url";
 import { GeometricDecoration } from "@/components/dojo/geometric-decoration";
 import { DojoLogo } from "@/components/dojo/logo";
 
@@ -64,10 +65,11 @@ function SignupForm() {
     setErrorMsg(null);
     try {
       const supabase = createClient();
+      const redirectTo = getAuthCallbackUrl();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
