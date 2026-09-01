@@ -10,6 +10,7 @@ const DEFAULT_ADMIN_EMAILS = [
   "admin@dojo.ai",
   "ashwinnethan64@gmail.com",
   "ashwinnethan07@gmail.com",
+  "shaheembn@gmail.com",
 ];
 
 /**

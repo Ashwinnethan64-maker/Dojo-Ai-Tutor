@@ -69,5 +69,13 @@ describe("DOJO Security & Sandbox Guardrails Suite", () => {
       user_metadata: {},
     };
     assert.strictEqual(isAdminUser(authorizedAdmin), true, "Platform admin on allowlist must be authorized");
+
+    const shaheemAdmin = {
+      id: "u3",
+      email: "shaheembn@gmail.com",
+      app_metadata: {},
+      user_metadata: {},
+    };
+    assert.strictEqual(isAdminUser(shaheemAdmin), true, "shaheembn@gmail.com must be authorized on admin allowlist");
   });
 });
