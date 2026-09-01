@@ -198,6 +198,8 @@ export default function DynamicWorkoutWorkspace({
       const endTime = performance.now();
       const totalT = workout.visibleTestCases.length + workout.hiddenTestCases.length;
       const passedT = result.passedTests ?? (result.status === "Accepted" ? totalT : 0);
+      const isPassedStatus = result.status === "Accepted" || result.status === "passed" || passedT === totalT;
+      const statusStr: string = result.status || "";
 
       // Build structured test cases detail
       const detailedTests: TestCaseDetail[] = (result.testResults && result.testResults.length > 0)
@@ -207,22 +209,22 @@ export default function DynamicWorkoutWorkspace({
               testIndex: idx + 1,
               stdin: tc.stdin,
               expectedOutput: tc.expectedOutput,
-              actualOutput: result.status === "Accepted" ? tc.expectedOutput : "None",
-              passed: result.status === "Accepted",
+              actualOutput: isPassedStatus ? tc.expectedOutput : "None",
+              passed: isPassedStatus,
               isHidden: false,
             })),
             ...workout.hiddenTestCases.map((tc, idx) => ({
               testIndex: workout.visibleTestCases.length + idx + 1,
               stdin: tc.stdin,
               expectedOutput: tc.expectedOutput,
-              actualOutput: result.status === "Accepted" ? tc.expectedOutput : "None",
-              passed: result.status === "Accepted",
+              actualOutput: isPassedStatus ? tc.expectedOutput : "None",
+              passed: isPassedStatus,
               isHidden: true,
             })),
           ];
 
       setExecutionResult({
-        status: result.status === "Accepted" ? "passed" : result.status.includes("Error") ? "error" : "failed",
+        status: isPassedStatus ? "passed" : statusStr.toLowerCase().includes("error") ? "error" : "failed",
         stdout: result.stdout || "",
         stderr: result.stderr || result.compileOutput || "",
         passedTests: passedT,
