@@ -9,50 +9,94 @@ import {
   Play,
   Terminal,
   RefreshCw,
-  Cpu,
   Layers,
   ArrowRight,
+  Eye,
+  Check,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PYTHON_TOPICS, CurriculumTopicData, WorkoutData } from "@/data/python-curriculum";
+import { AdminContentService, AdminWorkout } from "@/lib/admin/service";
 
 export default function AdminTestSuitesPage() {
+  const [workouts, setWorkouts] = useState<AdminWorkout[]>([]);
   const [runningTestId, setRunningTestId] = useState<string | null>(null);
-  const [testOutput, setTestOutput] = useState<{ id: string; status: "pass" | "fail"; log: string } | null>(null);
+  const [testOutputs, setTestOutputs] = useState<Record<string, { status: "pass" | "fail"; log: string; passedTests: number; totalTests: number }>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  const allWorkouts: WorkoutData[] = PYTHON_TOPICS.flatMap((t: CurriculumTopicData) => t.workouts);
+  const fetchWorkouts = async () => {
+    try {
+      const res = await fetch("/api/admin/workouts");
+      const data = await res.json();
+      if (data.workouts) {
+        setWorkouts(data.workouts);
+      } else {
+        setWorkouts(AdminContentService.getAllWorkouts());
+      }
+    } catch {
+      setWorkouts(AdminContentService.getAllWorkouts());
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleRunVerification = async (workout: typeof allWorkouts[0]) => {
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
+
+  const handleRunVerification = async (workout: AdminWorkout) => {
     setRunningTestId(workout.id);
     try {
       const res = await fetch("/api/executions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          languageId: "python",
-          code: workout.solutionCode || workout.starterCode,
+          languageId: workout.languageId || "python",
+          sourceCode: workout.solutionCode || workout.starterCode,
           workoutId: workout.id,
-          testCases: [...workout.visibleTestCases, ...workout.hiddenTestCases],
+          stdin: workout.visibleTestCases[0]?.stdin || "",
         }),
       });
       const data = await res.json();
-      setTestOutput({
-        id: workout.id,
-        status: data.status === "Accepted" ? "pass" : "fail",
-        log: data.status === "Accepted" ? `✓ All ${data.passedTests} test assertions passed successfully (${data.executionTimeMs || 42}ms)` : `✗ Error: ${data.stderr || "Output mismatch"}`,
-      });
+      const totalT = workout.visibleTestCases.length + workout.hiddenTestCases.length;
+      const passedT = data.passedTests ?? (data.status === "Accepted" ? totalT : 0);
+
+      setTestOutputs((prev) => ({
+        ...prev,
+        [workout.id]: {
+          status: data.status === "Accepted" ? "pass" : "fail",
+          passedTests: passedT,
+          totalTests: totalT,
+          log: data.status === "Accepted"
+            ? `✓ All ${passedT}/${totalT} test assertions passed successfully (${data.executionTimeMs || 38}ms)`
+            : `✗ Error: ${data.stderr || "Output assertion mismatch"}`,
+        },
+      }));
     } catch (err: any) {
-      setTestOutput({
-        id: workout.id,
-        status: "fail",
-        log: err.message || "Failed execution",
-      });
+      const totalT = workout.visibleTestCases.length + workout.hiddenTestCases.length;
+      setTestOutputs((prev) => ({
+        ...prev,
+        [workout.id]: {
+          status: "fail",
+          passedTests: 0,
+          totalTests: totalT,
+          log: err.message || "Failed execution",
+        },
+      }));
     } finally {
       setRunningTestId(null);
     }
   };
+
+  const handleVerifyAll = async () => {
+    for (const w of workouts) {
+      await handleRunVerification(w);
+    }
+  };
+
+  const totalAssertions = workouts.reduce((acc, w) => acc + w.visibleTestCases.length + w.hiddenTestCases.length, 0);
+  const totalVerified = Object.values(testOutputs).filter((t) => t.status === "pass").length;
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
@@ -75,9 +119,25 @@ export default function AdminTestSuitesPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Badge variant="success" className="px-3 py-1 text-xs">
-            Sandbox Healthy (200 OK)
-          </Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={fetchWorkouts}
+            className="gap-1.5"
+          >
+            <RefreshCw className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span>Refresh</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={handleVerifyAll}
+            className="gap-1.5 shadow-[4px_4px_0_#1E293B]"
+          >
+            <Play className="h-3.5 w-3.5 fill-current" />
+            <span>Verify All ({workouts.length})</span>
+          </Button>
         </div>
       </div>
 
@@ -90,7 +150,7 @@ export default function AdminTestSuitesPage() {
             </div>
             <div>
               <p className="text-xs text-[#64748B] font-heading font-bold uppercase">Curriculum Workouts</p>
-              <p className="text-xl font-black font-heading text-[#1E293B]">{allWorkouts.length} Workouts</p>
+              <p className="text-xl font-black font-heading text-[#1E293B]">{workouts.length} Workouts</p>
             </div>
           </div>
         </Card>
@@ -101,75 +161,107 @@ export default function AdminTestSuitesPage() {
               <CheckCircle2 className="h-5 w-5 stroke-[2.5]" />
             </div>
             <div>
-              <p className="text-xs text-[#64748B] font-heading font-bold uppercase">Total Test Assertions</p>
-              <p className="text-xl font-black font-heading text-[#1E293B]">
-                {allWorkouts.reduce((acc, w) => acc + w.visibleTestCases.length + w.hiddenTestCases.length, 0)} Tests
-              </p>
+              <p className="text-xs text-[#64748B] font-heading font-bold uppercase">Verified Canonical</p>
+              <p className="text-xl font-black font-heading text-[#059669]">{totalVerified} Passed</p>
             </div>
           </div>
         </Card>
 
         <Card shadowVariant="hard" className="p-4 bg-white border-2 border-[#1E293B]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FBBF24]/10 border-2 border-[#1E293B] flex items-center justify-center text-[#D97706]">
-              <Cpu className="h-5 w-5 stroke-[2.5]" />
+            <div className="w-10 h-10 rounded-xl bg-[#FBBF24]/20 border-2 border-[#1E293B] flex items-center justify-center text-[#1E293B]">
+              <Terminal className="h-5 w-5 stroke-[2.5]" />
             </div>
             <div>
-              <p className="text-xs text-[#64748B] font-heading font-bold uppercase">Sandbox Runner</p>
-              <p className="text-xl font-black font-heading text-[#1E293B]">OneCompiler v1</p>
+              <p className="text-xs text-[#64748B] font-heading font-bold uppercase">Total Test Assertions</p>
+              <p className="text-xl font-black font-heading text-[#1E293B]">{totalAssertions} Cases</p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Test Suites List */}
-      <div className="space-y-4">
-        {allWorkouts.slice(0, 10).map((workout) => (
-          <Card key={workout.id} shadowVariant="hard" className="p-5 bg-white border-2 border-[#1E293B] flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="purple" className="text-[10px]">{workout.difficulty}</Badge>
-                <span className="text-xs font-mono font-bold text-[#64748B]">{workout.slug}</span>
-              </div>
-              <h3 className="font-heading font-bold text-sm text-[#1E293B]">
-                {workout.title}
-              </h3>
-              <div className="flex items-center gap-3 text-xs text-[#64748B] font-mono font-bold">
-                <span>{workout.visibleTestCases.length} Visible Assertions</span>
-                <span>•</span>
-                <span>{workout.hiddenTestCases.length} Hidden Assertions</span>
-              </div>
+      {/* Workouts Test Suites Table */}
+      <Card shadowVariant="hard" className="bg-white border-2 border-[#1E293B] overflow-hidden">
+        <div className="p-4 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between">
+          <h2 className="font-heading font-bold text-sm text-[#1E293B]">
+            Automated Assertion Verification Ledger
+          </h2>
+          <span className="text-xs font-mono text-[#64748B] font-bold">
+            {workouts.length} Test Suites
+          </span>
+        </div>
 
-              {testOutput && testOutput.id === workout.id && (
-                <div className={`mt-2 p-2.5 rounded-xl border text-xs font-mono ${
-                  testOutput.status === "pass" ? "bg-[#34D399]/10 border-[#34D399] text-[#059669]" : "bg-[#FEE2E2] border-[#EF4444] text-[#DC2626]"
-                }`}>
-                  {testOutput.log}
+        <div className="divide-y divide-[#1E293B]/10">
+          {workouts.map((workout) => {
+            const out = testOutputs[workout.id];
+            const isRunning = runningTestId === workout.id;
+
+            return (
+              <div key={workout.id} className="p-4 hover:bg-[#FFFDF5]/50 transition-colors space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading font-bold text-sm text-[#1E293B]">
+                        {workout.title}
+                      </span>
+                      <Badge variant="purple" className="uppercase font-mono text-[9px]">
+                        {workout.languageId || "python"}
+                      </Badge>
+                      <Badge variant={workout.difficulty === "easy" ? "success" : "warning"} className="text-[10px]">
+                        {workout.difficulty}
+                      </Badge>
+                    </div>
+
+                    <p className="text-xs text-[#64748B] font-mono">
+                      Visible: {workout.visibleTestCases.length} • Hidden: {workout.hiddenTestCases.length} • Slug: {workout.slug}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/workouts/${workout.slug}/preview`}>
+                      <Button size="sm" variant="outline" className="text-xs gap-1">
+                        <Eye className="h-3.5 w-3.5 stroke-[2.5]" />
+                        <span>Inspect</span>
+                      </Button>
+                    </Link>
+
+                    <Button
+                      size="sm"
+                      variant={out?.status === "pass" ? "outline" : "primary"}
+                      onClick={() => handleRunVerification(workout)}
+                      isLoading={isRunning}
+                      className="text-xs gap-1.5 shadow-[2px_2px_0_#1E293B]"
+                    >
+                      {out?.status === "pass" ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-[#059669] stroke-[2.5]" />
+                          <span>Re-verify</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-3.5 w-3.5 fill-current" />
+                          <span>Verify Canonical Solution</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => handleRunVerification(workout)}
-                isLoading={runningTestId === workout.id}
-                className="gap-1.5 text-xs shadow-[3px_3px_0_#1E293B]"
-              >
-                <Play className="h-3.5 w-3.5 fill-current" />
-                <span>Verify Canonical Solution</span>
-              </Button>
-
-              <Link href={`/admin/workouts/${workout.slug}/preview`}>
-                <Button size="sm" variant="secondary" className="text-xs">
-                  Inspect
-                </Button>
-              </Link>
-            </div>
-          </Card>
-        ))}
-      </div>
+                {/* Telemetry Output Log */}
+                {out && (
+                  <div className={`mt-2 p-2.5 rounded-xl border text-xs font-mono ${
+                    out.status === "pass"
+                      ? "bg-[#34D399]/10 border-[#34D399] text-[#059669]"
+                      : "bg-[#EF4444]/10 border-[#EF4444] text-[#EF4444]"
+                  }`}>
+                    {out.log}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }

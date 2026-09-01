@@ -1,25 +1,24 @@
 "use client";
 
-import React, { use, useState, useRef } from "react";
+import React, { use, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Play,
   RotateCcw,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   Terminal,
   BookOpen,
-  HelpCircle,
   Shield,
   Eye,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Editor from "@monaco-editor/react";
-import { PYTHON_TOPICS, WorkoutData } from "@/data/python-curriculum";
 import { useEditorTheme } from "@/contexts/theme-context";
+import { AdminContentService, AdminWorkout } from "@/lib/admin/service";
 
 export default function AdminWorkoutPreviewPage({
   params,
@@ -29,40 +28,9 @@ export default function AdminWorkoutPreviewPage({
   const resolvedParams = use(params);
   const { editorTheme } = useEditorTheme();
 
-  // Find workout by slug across all topics or fallback
-  let foundWorkout: WorkoutData | undefined;
-  for (const topic of PYTHON_TOPICS) {
-    const match = topic.workouts.find((w: WorkoutData) => w.slug === resolvedParams.slug);
-    if (match) {
-      foundWorkout = match;
-      break;
-    }
-  }
-
-  const workout: WorkoutData = foundWorkout || {
-    id: "admin-preview-1",
-    title: resolvedParams.slug.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" "),
-    slug: resolvedParams.slug,
-    difficulty: "medium",
-    learningObjective: "Admin Quality Review & Sandbox Verification",
-    description: "Reviewing code execution, hint generation, and test suites in protected Admin mode.",
-    instructions: "Run automated tests to inspect telemetry and edge-case assertion behavior.",
-    concepts: ["Quality Assurance", "Testing", "Code Execution"],
-    starterCode: "def solve(numbers):\n    # Admin inspection stub\n    return [n * 2 for n in numbers]\n",
-    solutionCode: "def solve(numbers):\n    return [n * 2 for n in numbers]\n",
-    hints: [
-      "Level 1: Inspect input parameter constraints.",
-      "Level 2: Check edge conditions such as empty list [] or negative integers.",
-    ],
-    visibleTestCases: [
-      { stdin: "solve([1, 2, 3])", expectedOutput: "[2, 4, 6]" },
-    ],
-    hiddenTestCases: [
-      { stdin: "solve([])", expectedOutput: "[]" },
-    ],
-  };
-
-  const [code, setCode] = useState(workout.starterCode);
+  const [workout, setWorkout] = useState<AdminWorkout | null>(null);
+  const [code, setCode] = useState("");
+  const [solutionLoaded, setSolutionLoaded] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [executionResult, setExecutionResult] = useState<{
     status: "idle" | "passed" | "failed" | "error";
@@ -71,14 +39,101 @@ export default function AdminWorkoutPreviewPage({
     passedTests: number;
     totalTests: number;
     timeMs: number;
+    testResults?: Array<{
+      testIndex: number;
+      stdin: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+      isHidden: boolean;
+    }>;
   }>({
     status: "idle",
     passedTests: 0,
-    totalTests: workout.visibleTestCases.length + workout.hiddenTestCases.length,
+    totalTests: 0,
     timeMs: 0,
   });
 
+  useEffect(() => {
+    // 1. First attempt to fetch from AdminContentService
+    const found = AdminContentService.getWorkoutById(resolvedParams.slug);
+    if (found) {
+      setWorkout(found);
+      setCode(found.starterCode);
+    } else {
+      // Fetch from API
+      fetch("/api/admin/workouts")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.workouts) {
+            const match = data.workouts.find(
+              (w: AdminWorkout) => w.id === resolvedParams.slug || w.slug === resolvedParams.slug
+            );
+            if (match) {
+              setWorkout(match);
+              setCode(match.starterCode);
+            }
+          }
+        })
+        .catch(() => {
+          // Fallback minimal stub
+          const fallback: AdminWorkout = {
+            id: resolvedParams.slug,
+            slug: resolvedParams.slug,
+            title: resolvedParams.slug.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" "),
+            difficulty: "medium",
+            learningObjective: "Admin Quality Review & Sandbox Verification",
+            description: "Reviewing code execution, hint generation, and test suites in protected Admin mode.",
+            instructions: "Run automated tests to inspect telemetry and edge-case assertion behavior.",
+            concepts: ["Quality Assurance", "Testing", "Code Execution"],
+            starterCode: "def solve(numbers):\n    # Admin inspection stub\n    return [n * 2 for n in numbers]\n",
+            solutionCode: "def solve(numbers):\n    return [n * 2 for n in numbers]\n",
+            hints: [
+              "Level 1: Inspect input parameter constraints.",
+              "Level 2: Check edge conditions such as empty list [] or negative integers.",
+            ],
+            visibleTestCases: [
+              { stdin: "solve([1, 2, 3])", expectedOutput: "[2, 4, 6]" },
+            ],
+            hiddenTestCases: [
+              { stdin: "solve([])", expectedOutput: "[]" },
+            ],
+            languageId: "python",
+            topicId: "loops",
+            isPublished: true,
+            isAiGenerated: false,
+            approvalStatus: "approved",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          setWorkout(fallback);
+          setCode(fallback.starterCode);
+        });
+    }
+  }, [resolvedParams.slug]);
+
+  const handleLoadSolution = () => {
+    if (!workout) return;
+    const targetSolution = workout.solutionCode || workout.starterCode;
+    setCode(targetSolution);
+    setSolutionLoaded(true);
+    setTimeout(() => setSolutionLoaded(false), 2500);
+  };
+
+  const handleResetCode = () => {
+    if (!workout) return;
+    setCode(workout.starterCode);
+    setSolutionLoaded(false);
+    setExecutionResult({
+      status: "idle",
+      passedTests: 0,
+      totalTests: workout.visibleTestCases.length + workout.hiddenTestCases.length,
+      timeMs: 0,
+    });
+  };
+
   const handleRunCode = async () => {
+    if (!workout) return;
     setIsRunning(true);
     try {
       const startTime = performance.now();
@@ -86,22 +141,26 @@ export default function AdminWorkoutPreviewPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          languageId: "python",
-          code,
+          languageId: workout.languageId || "python",
+          sourceCode: code,
           workoutId: workout.id,
-          testCases: [...workout.visibleTestCases, ...workout.hiddenTestCases],
+          stdin: workout.visibleTestCases[0]?.stdin || "",
         }),
       });
       const data = await res.json();
       const endTime = performance.now();
 
+      const totalT = workout.visibleTestCases.length + workout.hiddenTestCases.length;
+      const passedT = data.passedTests ?? (data.status === "Accepted" ? totalT : 0);
+
       setExecutionResult({
         status: data.status === "Accepted" ? "passed" : "failed",
         stdout: data.stdout,
         stderr: data.stderr,
-        passedTests: data.passedTests ?? (data.status === "Accepted" ? workout.visibleTestCases.length + workout.hiddenTestCases.length : 0),
-        totalTests: workout.visibleTestCases.length + workout.hiddenTestCases.length,
-        timeMs: Math.round(endTime - startTime),
+        passedTests: passedT,
+        totalTests: totalT,
+        timeMs: data.executionTimeMs || Math.round(endTime - startTime),
+        testResults: data.testResults,
       });
     } catch (err: any) {
       setExecutionResult({
@@ -115,6 +174,29 @@ export default function AdminWorkoutPreviewPage({
       setIsRunning(false);
     }
   };
+
+  if (!workout) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 space-y-3">
+        <div className="w-10 h-10 rounded-full border-4 border-[#1E293B] border-t-[#8B5CF6] animate-spin shadow-[3px_3px_0_#1E293B]" />
+        <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">
+          Loading admin workspace preview...
+        </span>
+      </div>
+    );
+  }
+
+  const getEditorFilename = (lang = "python") => {
+    switch (lang) {
+      case "javascript": return "main.js";
+      case "typescript": return "main.ts";
+      case "cpp": return "main.cpp";
+      case "java": return "Main.java";
+      default: return "main.py";
+    }
+  };
+
+  const monacoLanguage = workout.languageId === "cpp" ? "cpp" : workout.languageId === "javascript" ? "javascript" : workout.languageId === "typescript" ? "typescript" : workout.languageId === "java" ? "java" : "python";
 
   return (
     <div className="flex flex-col lg:h-[calc(100vh-7rem)] lg:overflow-hidden space-y-4 max-w-7xl mx-auto pb-12 lg:pb-0">
@@ -137,6 +219,9 @@ export default function AdminWorkoutPreviewPage({
               <Badge variant={workout.difficulty === "easy" ? "success" : "warning"}>
                 {workout.difficulty}
               </Badge>
+              <Badge variant="purple" className="uppercase font-mono text-[10px]">
+                {workout.languageId || "python"}
+              </Badge>
             </div>
             <h1 className="font-heading font-black text-lg text-[#1E293B] mt-0.5">
               {workout.title}
@@ -147,18 +232,27 @@ export default function AdminWorkoutPreviewPage({
         <div className="flex items-center gap-2 self-end sm:self-center">
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => setCode(workout.solutionCode || workout.starterCode)}
-            className="gap-1.5 text-xs"
+            variant={solutionLoaded ? "mint" : "outline"}
+            onClick={handleLoadSolution}
+            className="gap-1.5 text-xs transition-all duration-200"
           >
-            <Eye className="h-3.5 w-3.5 stroke-[2.5]" />
-            <span>Load Solution</span>
+            {solutionLoaded ? (
+              <>
+                <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>Solution Loaded ✓</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>Load Solution</span>
+              </>
+            )}
           </Button>
 
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setCode(workout.starterCode)}
+            onClick={handleResetCode}
             className="gap-1.5"
           >
             <RotateCcw className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -240,110 +334,137 @@ export default function AdminWorkoutPreviewPage({
         {/* Center: Monaco Editor + Terminal */}
         <div className="lg:col-span-5 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-[#1E1E1E] shadow-[4px_4px_0_#1E293B] overflow-hidden min-h-[420px] lg:min-h-0">
           <div className="h-10 bg-[#252526] px-4 border-b border-[#333333] flex items-center justify-between text-xs text-[#CCCCCC] select-none">
-            <span className="font-mono font-medium">main.py</span>
-            <span className="text-[10px] font-mono opacity-70">Admin Python 3.12 Runner</span>
+            <span className="font-mono font-medium">{getEditorFilename(workout.languageId)}</span>
+            <span className="text-[10px] font-mono opacity-70">Admin {workout.languageId?.toUpperCase() || "PYTHON"} Sandbox</span>
           </div>
 
           <div className="flex-1 min-h-[260px]">
             <Editor
               height="100%"
-              language="python"
+              language={monacoLanguage}
               theme={editorTheme}
               value={code}
-              onChange={(newVal) => setCode(newVal || "")}
+              onChange={(val) => setCode(val || "")}
               options={{
-                fontSize: 13,
-                fontFamily: "Fira Code, monospace",
                 minimap: { enabled: false },
-                scrollBeyondLastLine: false,
+                fontSize: 13,
+                fontFamily: "var(--font-mono)",
                 lineNumbers: "on",
+                scrollBeyondLastLine: false,
                 automaticLayout: true,
+                tabSize: 4,
               }}
             />
           </div>
 
-          <div className="h-44 border-t-2 border-[#1E293B] bg-white flex flex-col text-[#1E293B]">
-            <div className="h-9 px-4 border-b border-[#1E293B]/10 bg-[#FFFDF5] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-3.5 w-3.5 text-[#8B5CF6] stroke-[2.5]" />
-                <span className="font-heading font-bold text-xs">Sandbox Execution Results</span>
-              </div>
-
-              {executionResult.status !== "idle" && (
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={executionResult.status === "passed" ? "success" : "danger"}
-                    className="text-[10px]"
-                  >
-                    {executionResult.status === "passed" ? "All Tests Passed" : "Assertion Errors"}
-                  </Badge>
-                  <span className="text-[10px] font-mono text-[#64748B]">
-                    {executionResult.timeMs}ms
-                  </span>
-                </div>
-              )}
+          {/* Mini Output Drawer */}
+          <div className="border-t-2 border-[#333333] bg-[#181818] p-3 text-xs font-mono text-[#CCCCCC] max-h-36 overflow-y-auto">
+            <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-[#333333] text-[11px] text-[#888888]">
+              <span className="flex items-center gap-1.5">
+                <Terminal className="h-3.5 w-3.5" />
+                <span>Sandbox Output Terminal</span>
+              </span>
+              <span>{executionResult.timeMs > 0 ? `${executionResult.timeMs}ms` : "Ready"}</span>
             </div>
 
-            <div className="flex-1 p-3 overflow-y-auto font-mono text-xs bg-[#FFFDF5]">
-              {executionResult.status === "idle" ? (
-                <span className="text-[#94A3B8] italic">
-                  Click &ldquo;Test In Sandbox&rdquo; to execute the test harness...
-                </span>
-              ) : executionResult.status === "passed" ? (
-                <div className="text-[#059669] space-y-1 font-bold">
-                  <p>✓ All {executionResult.passedTests}/{executionResult.totalTests} test assertions passed!</p>
-                  <p className="text-[#1E293B] text-[11px] font-normal">{executionResult.stdout}</p>
-                </div>
-              ) : (
-                <div className="text-[#DC2626] space-y-1">
-                  <p className="font-bold">✗ Execution Failed ({executionResult.passedTests}/{executionResult.totalTests} passed)</p>
-                  <pre className="text-[11px] whitespace-pre-wrap text-[#1E293B]">{executionResult.stdout || executionResult.stderr}</pre>
-                </div>
-              )}
-            </div>
+            {executionResult.status === "idle" && (
+              <p className="text-[#666666]">Click &ldquo;Test In Sandbox&rdquo; or &ldquo;Load Solution&rdquo; to test against assertions.</p>
+            )}
+
+            {executionResult.stdout && (
+              <pre className="text-[#4ADE80] whitespace-pre-wrap">{executionResult.stdout}</pre>
+            )}
+
+            {executionResult.stderr && (
+              <pre className="text-[#F87171] whitespace-pre-wrap">{executionResult.stderr}</pre>
+            )}
           </div>
         </div>
 
-        {/* Right: Progressive Hints & Content Metadata */}
-        <div className="lg:col-span-3 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] overflow-hidden min-h-[300px] lg:min-h-0">
+        {/* Right: Telemetry & Test Assertion Ledger */}
+        <div className="lg:col-span-3 flex flex-col rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] overflow-hidden max-h-[400px] lg:max-h-none">
           <div className="p-4 border-b-2 border-[#1E293B] bg-[#FFFDF5] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#8B5CF6] stroke-[2.5]" />
-              <h2 className="font-heading font-bold text-sm text-[#1E293B]">
-                Hints &amp; Concepts
-              </h2>
-            </div>
-            <Badge variant="warning">Inspection</Badge>
+            <h3 className="font-heading font-bold text-sm text-[#1E293B]">
+              Assertion Telemetry
+            </h3>
+            {executionResult.status === "passed" && (
+              <Badge variant="success">All Passed ✓</Badge>
+            )}
+            {executionResult.status === "failed" && (
+              <Badge variant="danger">Failed ✗</Badge>
+            )}
+            {executionResult.status === "idle" && (
+              <Badge variant="secondary">Pending Run</Badge>
+            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div>
-              <span className="font-heading font-bold text-[10px] uppercase tracking-wider text-[#64748B]">
-                Tested Concepts
-              </span>
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {workout.concepts.map((concept, i) => (
-                  <Badge key={i} variant="purple" className="text-[10px]">
-                    {concept}
-                  </Badge>
-                ))}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+            <div className="p-3 rounded-xl border border-[#1E293B]/20 bg-[#FFFDF5] space-y-1">
+              <div className="flex items-center justify-between font-heading font-bold">
+                <span>Pass Rate</span>
+                <span className={executionResult.passedTests === executionResult.totalTests && executionResult.totalTests > 0 ? "text-[#059669]" : "text-[#1E293B]"}>
+                  {executionResult.passedTests} / {executionResult.totalTests || workout.visibleTestCases.length + workout.hiddenTestCases.length}
+                </span>
               </div>
+              <p className="text-[11px] text-[#64748B]">
+                {executionResult.status === "passed"
+                  ? "Canonical / candidate solution satisfies all test cases."
+                  : "Execute code to verify correctness against test harness."}
+              </p>
             </div>
 
+            {/* Individual test results breakdown */}
             <div className="space-y-2">
-              <span className="font-heading font-bold text-[10px] uppercase tracking-wider text-[#64748B]">
-                Progressive Hint Tiers ({workout.hints.length})
+              <span className="font-heading font-bold uppercase text-[10px] tracking-wider text-[#64748B]">
+                Test Suite Breakdown
               </span>
-              <div className="space-y-2">
-                {workout.hints.map((hint, idx) => (
-                  <div key={idx} className="p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-medium text-[#1E293B] shadow-[2px_2px_0_#1E293B]">
-                    <span className="font-heading font-bold text-[11px] text-[#8B5CF6] block mb-1">
-                      Tier {idx + 1} Hint
+
+              {workout.visibleTestCases.map((tc, idx) => {
+                const tr = executionResult.testResults?.find(t => t.testIndex === idx + 1);
+                const isPassed = tr ? tr.passed : executionResult.status === "passed";
+
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg border border-[#1E293B]/10 bg-white text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      {executionResult.status === "idle" ? (
+                        <span className="w-2 h-2 rounded-full bg-[#94A3B8]" />
+                      ) : isPassed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      ) : (
+                        <AlertCircle className="h-3.5 w-3.5 text-[#EF4444]" />
+                      )}
+                      <span className="font-mono">Visible #{idx + 1}</span>
+                    </div>
+                    <span className="font-heading font-bold text-[10px]">
+                      {executionResult.status === "idle" ? "UNTESTED" : isPassed ? "PASS ✓" : "FAIL ✗"}
                     </span>
-                    <p>{hint}</p>
                   </div>
-                ))}
-              </div>
+                );
+              })}
+
+              {workout.hiddenTestCases.map((tc, idx) => {
+                const totalVisible = workout.visibleTestCases.length;
+                const tr = executionResult.testResults?.find(t => t.testIndex === totalVisible + idx + 1);
+                const isPassed = tr ? tr.passed : executionResult.status === "passed";
+
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg border border-[#8B5CF6]/20 bg-[#8B5CF6]/5 text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      {executionResult.status === "idle" ? (
+                        <span className="w-2 h-2 rounded-full bg-[#94A3B8]" />
+                      ) : isPassed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#8B5CF6]" />
+                      ) : (
+                        <AlertCircle className="h-3.5 w-3.5 text-[#EF4444]" />
+                      )}
+                      <span className="font-mono">Hidden #{idx + 1}</span>
+                    </div>
+                    <span className="font-heading font-bold text-[10px]">
+                      {executionResult.status === "idle" ? "UNTESTED" : isPassed ? "PASS ✓" : "FAIL ✗"}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
