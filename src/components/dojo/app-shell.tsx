@@ -1,11 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dojo/sidebar";
 import { Header } from "@/components/dojo/header";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile drawer on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#FFFDF5] text-[#1E293B]">
@@ -19,7 +38,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <Sidebar className="relative z-10 w-72 shadow-[6px_0_0_#1E293B]" />
+          <Sidebar
+            className="relative z-10 w-72 shadow-[6px_0_0_#1E293B]"
+            onNavigate={() => setIsMobileMenuOpen(false)}
+          />
         </div>
       )}
 

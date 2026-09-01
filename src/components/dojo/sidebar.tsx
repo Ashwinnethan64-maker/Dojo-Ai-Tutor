@@ -14,7 +14,6 @@ import {
   Settings,
   Flame,
   Zap,
-  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BeltBadge } from "@/components/dojo/belt";
@@ -28,15 +27,38 @@ const NAV_ITEMS = [
   { label: "Mistake Memory", href: "/mistakes", icon: AlertOctagon, badge: "3" },
   { label: "Flashcards", href: "/flashcards", icon: Layers, badge: "8 due" },
   { label: "Progression", href: "/progress", icon: TrendingUp },
-  { label: "AI Insights", href: "/insights", icon: Sparkles },
+  { label: "AI Insights", href: "/insights", icon: SparklesIcon },
 ];
+
+function SparklesIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    </svg>
+  );
+}
 
 const SECONDARY_NAV = [
   { label: "Profile", href: "/profile", icon: User },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar({
+  className,
+  onNavigate,
+}: {
+  className?: string;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const { activeLanguage } = useLanguage();
 
@@ -49,7 +71,7 @@ export function Sidebar({ className }: { className?: string }) {
     >
       {/* Brand Header */}
       <div className="h-18 px-6 flex items-center justify-between border-b-2 border-[#1E293B] bg-[#FFFDF5]">
-        <Link href="/dashboard" className="flex items-center group">
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center group">
           <DojoLogo size="md" />
         </Link>
       </div>
@@ -86,6 +108,7 @@ export function Sidebar({ className }: { className?: string }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center justify-between px-3 py-2.5 rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
                 isActive
@@ -132,6 +155,7 @@ export function Sidebar({ className }: { className?: string }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-xl font-heading text-xs font-bold transition-all duration-150 group",
                 isActive
