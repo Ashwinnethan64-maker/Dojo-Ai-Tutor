@@ -25,12 +25,14 @@ import { useLanguage, SupportedLanguageId } from "@/contexts/language-context";
 import { User } from "@supabase/supabase-js";
 import { SearchResultItem } from "@/app/api/search/route";
 
+import { useAuth } from "@/contexts/auth-context";
+
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { activeLanguage, activeLanguageId, setActiveLanguage, languages } = useLanguage();
+  const { user, profile, signOut } = useAuth();
   const router = useRouter();
 
   const [isLangOpen, setIsLangOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -81,49 +83,18 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const supabase = getBrowserClient();
-    if (!supabase) return;
-
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        setUser(data.user);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const handleSelectLanguage = (langId: SupportedLanguageId) => {
     setActiveLanguage(langId);
     setIsLangOpen(false);
   };
 
   const handleSignOut = async () => {
-    const supabase = getBrowserClient();
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-    startTransition(() => {
-      window.location.href = "/login";
-    });
+    await signOut();
   };
 
-  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-  const displayName =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "Warrior";
-  const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl = profile?.avatarUrl;
+  const displayName = profile?.displayName || "Warrior";
+  const initial = profile?.initial || "W";
 
   return (
     <header className="h-18 border-b-2 border-[#1E293B] bg-white px-4 sm:px-8 flex items-center justify-between shrink-0 select-none relative z-30">

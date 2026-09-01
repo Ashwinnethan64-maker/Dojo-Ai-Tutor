@@ -14,4 +14,32 @@ describe("Personalized Dashboard Aggregator", () => {
     assert.ok(data.masteryTrends.concepts.length >= 4);
     assert.ok(data.languageTracks.length >= 4);
   });
+
+  it("isolates multi-user profile data dynamically with zero hardcoded cross-talk", async () => {
+    // User A
+    const userA = await DashboardDataService.getPersonalizedDashboard("user-a-123", {
+      displayName: "Sarah Connor",
+      email: "sarah.connor@gmail.com",
+      avatarUrl: "https://example.com/sarah.jpg",
+    });
+
+    // User B
+    const userB = await DashboardDataService.getPersonalizedDashboard("user-b-456", {
+      displayName: "Jagadish Naik",
+      email: "jagadishnaikgerusoppa@gmail.com",
+      avatarUrl: "https://example.com/jagadish.jpg",
+    });
+
+    assert.strictEqual(userA.user.displayName, "Sarah Connor");
+    assert.strictEqual(userA.user.username, "sarah_connor");
+    assert.strictEqual(userA.user.avatarUrl, "https://example.com/sarah.jpg");
+
+    assert.strictEqual(userB.user.displayName, "Jagadish Naik");
+    assert.strictEqual(userB.user.username, "jagadishnaikgerusoppa");
+    assert.strictEqual(userB.user.avatarUrl, "https://example.com/jagadish.jpg");
+
+    // Zero cross-talk
+    assert.notStrictEqual(userA.user.displayName, userB.user.displayName);
+    assert.notStrictEqual(userA.user.username, userB.user.username);
+  });
 });

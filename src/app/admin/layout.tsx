@@ -1,6 +1,7 @@
 import React from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { ToastProvider } from "@/components/ui/toast";
+import { AuthProvider } from "@/contexts/auth-context";
 
 export default function AdminLayout({
   children,
@@ -9,7 +10,9 @@ export default function AdminLayout({
 }) {
   return (
     <ToastProvider>
-      <AdminShell>{children}</AdminShell>
+      <AuthProvider>
+        <AdminShell>{children}</AdminShell>
+      </AuthProvider>
     </ToastProvider>
   );
 }

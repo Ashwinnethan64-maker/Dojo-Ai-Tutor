@@ -64,7 +64,10 @@ export class DashboardDataService {
   /**
    * Aggregates real personalized dashboard metrics across all services
    */
-  public static async getPersonalizedDashboard(userId = "current-user"): Promise<DashboardData> {
+  public static async getPersonalizedDashboard(
+    userId = "current-user",
+    userProfile?: { displayName?: string; email?: string; avatarUrl?: string }
+  ): Promise<DashboardData> {
     const progression: UserProgressionState = ProgressionService.getUserProgression(userId);
     const masteries: ConceptMasteryMetrics[] = AdaptiveMasteryEngine.getUserConceptMastery(userId);
     const mistakes: StoredMistake[] = MistakeIntelligenceEngine.getUserMistakes(userId);
@@ -73,10 +76,20 @@ export class DashboardDataService {
 
     const weakConcepts = masteries.filter((m) => m.masteryScore < 65).slice(0, 3);
 
+    const displayName =
+      userProfile?.displayName ||
+      (userProfile?.email ? userProfile.email.split("@")[0] : "Warrior");
+
+    const username =
+      userProfile?.email
+        ? userProfile.email.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "_")
+        : `warrior_${userId.slice(0, 6)}`;
+
     return {
       user: {
-        username: "ashwin_coder",
-        displayName: "Ashwin",
+        username,
+        displayName,
+        avatarUrl: userProfile?.avatarUrl,
         currentLanguage: "Python",
         currentBelt: progression.currentBelt,
         nextBelt: progression.nextBelt,

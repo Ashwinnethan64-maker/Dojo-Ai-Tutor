@@ -23,10 +23,12 @@ import { BeltBadge, BeltCard } from "@/components/dojo/belt";
 import { DashboardData } from "@/lib/dashboard/service";
 import { GeometricDecoration } from "@/components/dojo/geometric-decoration";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
 import { getCurriculumForLanguage } from "@/data/curriculum-registry";
 
 export default function DashboardPage() {
   const { activeLanguage, activeLanguageId } = useLanguage();
+  const { profile, user, isLoading: isAuthLoading } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,9 +51,9 @@ export default function DashboardPage() {
         console.warn("Failed fetching dashboard data:", err);
         setIsLoading(false);
       });
-  }, [activeLanguageId]);
+  }, [activeLanguageId, user?.id]);
 
-  if (isLoading || !data) {
+  if (isLoading || isAuthLoading || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-3">
         <div className="w-10 h-10 rounded-full border-4 border-[#1E293B] border-t-[#8B5CF6] animate-spin shadow-[3px_3px_0_#1E293B]" />
@@ -61,6 +63,8 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const effectiveDisplayName = profile?.displayName || data.user.displayName || "Warrior";
 
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
@@ -81,7 +85,7 @@ export default function DashboardPage() {
               </Badge>
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#1E293B]">
-              Good morning, warrior {data.user.displayName}!
+              Good morning, warrior {effectiveDisplayName}!
             </h1>
             <p className="text-sm font-medium text-[#64748B] leading-relaxed">
               You are {data.user.beltProgressPercent}% towards your{" "}

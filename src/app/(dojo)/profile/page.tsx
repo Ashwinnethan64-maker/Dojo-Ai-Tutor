@@ -1,42 +1,37 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Calendar, Code2, Shield, Flame, Zap, LogOut } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { BeltBadge } from "@/components/dojo/belt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getBrowserClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/contexts/language-context";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function ProfilePage() {
   const { activeLanguage } = useLanguage();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const supabase = getBrowserClient();
-    if (!supabase) return;
-
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        setUser(data.user);
-      }
-    });
-  }, []);
+  const { user, profile, signOut, isLoading } = useAuth();
 
   const handleSignOut = async () => {
-    const supabase = getBrowserClient();
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-    window.location.href = "/login";
+    await signOut();
   };
 
-  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Ashwin";
-  const userEmail = user?.email || "ashwin@example.com";
-  const initial = displayName.charAt(0).toUpperCase();
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 space-y-3">
+        <div className="w-10 h-10 rounded-full border-4 border-[#1E293B] border-t-[#8B5CF6] animate-spin shadow-[3px_3px_0_#1E293B]" />
+        <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">
+          Loading profile...
+        </span>
+      </div>
+    );
+  }
+
+  const avatarUrl = profile?.avatarUrl;
+  const displayName = profile?.displayName || "Warrior";
+  const userEmail = profile?.email || "Signed in";
+  const initial = profile?.initial || "W";
 
   return (
     <div className="space-y-6 pb-12 max-w-4xl mx-auto">
