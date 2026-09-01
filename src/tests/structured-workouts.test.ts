@@ -91,6 +91,34 @@ describe("Structured Workouts Track & Shuffle Engine", () => {
     assert.strictEqual(res.passedTests, pyWorkout.visibleTestCases.length + pyWorkout.hiddenTestCases.length);
   });
 
+  it("executes JavaScript filterEvens solution and captures [2, 4, 6] passing all assertions", async () => {
+    const all = StructuredWorkoutService.getAllWorkouts();
+    const jsWorkout = all.find((w) => w.languageId === "javascript" && w.slug === "js-filter-evens");
+    assert.ok(jsWorkout);
+
+    const userCode = `
+function filterEvens(nums) {
+  const result = [];
+  for (let num of nums) {
+    if (num % 2 === 0) result.push(num);
+  }
+  return result;
+}
+`;
+
+    const res = await IsolatedExecutionService.executeCode(
+      userCode,
+      "javascript",
+      "",
+      jsWorkout.id
+    );
+
+    assert.strictEqual(res.status, "Accepted");
+    assert.strictEqual(res.passedTests, jsWorkout.visibleTestCases.length + jsWorkout.hiddenTestCases.length);
+    assert.ok(res.testResults && res.testResults.length > 0);
+    assert.strictEqual(res.testResults[0].actualOutput, "[2,4,6]");
+  });
+
   it("evaluates wrong user code and genuinely marks it as failed", async () => {
     const all = StructuredWorkoutService.getAllWorkouts();
     const pyWorkout = all.find((w) => w.languageId === "python" && w.slug === "py-first-unique-char");
@@ -107,6 +135,24 @@ describe("Structured Workouts Track & Shuffle Engine", () => {
 
     assert.strictEqual(res.status, "Wrong Answer");
     assert.strictEqual(res.passedTests, 0);
+  });
+
+  it("evaluates wrong JavaScript code and genuinely marks it as failed", async () => {
+    const all = StructuredWorkoutService.getAllWorkouts();
+    const jsWorkout = all.find((w) => w.languageId === "javascript" && w.slug === "js-filter-evens");
+    assert.ok(jsWorkout);
+
+    const wrongJsCode = "function filterEvens(nums) { return [999]; }";
+    const res = await IsolatedExecutionService.executeCode(
+      wrongJsCode,
+      "javascript",
+      "",
+      jsWorkout.id
+    );
+
+    assert.strictEqual(res.status, "Wrong Answer");
+    assert.strictEqual(res.passedTests, 0);
+    assert.strictEqual(res.testResults?.[0]?.actualOutput, "[999]");
   });
 
   it("performs semantic evaluation on mismatch without blindly passing wrong logic", async () => {
