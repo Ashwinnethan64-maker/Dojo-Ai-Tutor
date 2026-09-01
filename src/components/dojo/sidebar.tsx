@@ -14,6 +14,7 @@ import {
   Settings,
   Flame,
   Zap,
+  BookOpenCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BeltBadge } from "@/components/dojo/belt";
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Curriculum", href: "/learn", icon: GraduationCap },
   { label: "Workouts", href: "/workouts", icon: Dumbbell },
+  { label: "Structured Track", href: "/structured-workouts", icon: BookOpenCheck, badge: "New" },
   { label: "Mistake Memory", href: "/mistakes", icon: AlertOctagon, badge: "3" },
   { label: "Flashcards", href: "/flashcards", icon: Layers, badge: "8 due" },
   { label: "Progression", href: "/progress", icon: TrendingUp },

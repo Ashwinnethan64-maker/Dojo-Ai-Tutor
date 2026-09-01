@@ -11,12 +11,14 @@ import {
   Users,
   BarChart3,
   ExternalLink,
+  BookOpenCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DojoLogo } from "@/components/dojo/logo";
 
 const ADMIN_NAV = [
   { label: "Workouts & Content", href: "/admin", icon: FileCode2 },
+  { label: "Structured Workouts", href: "/admin/structured-workouts", icon: BookOpenCheck },
   { label: "Create Workout", href: "/admin/workouts/new", icon: PlusCircle },
   { label: "AI Generator Queue", href: "/admin/ai-generator", icon: Sparkles },
   { label: "Test Suites & Telemetry", href: "/admin/test-suites", icon: Layers },

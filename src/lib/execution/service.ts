@@ -11,6 +11,7 @@ import {
   JAVA_TOPICS,
 } from "@/data/curriculum-registry";
 import { AdminContentService } from "@/lib/admin/service";
+import { StructuredWorkoutService } from "@/lib/structured-workouts/service";
 
 export class IsolatedExecutionService {
   /**
@@ -24,33 +25,53 @@ export class IsolatedExecutionService {
   ): Promise<ExecutionResultResponse> {
     const executionId = `exec-${Math.random().toString(36).substring(2, 9)}`;
 
-    // 1. Resolve workout across curriculum registries and AdminContentService
+    // 1. Resolve workout across curriculum registries, AdminContentService, and StructuredWorkoutService
     let workout: WorkoutData | undefined;
     if (workoutId) {
-      // First check AdminContentService (covers AI-generated and admin-modified workouts)
-      const adminFound = AdminContentService.getWorkoutById(workoutId);
-      if (adminFound) {
-        workout = adminFound;
+      // Check StructuredWorkoutService first
+      const structFound = StructuredWorkoutService.getWorkoutBySlugOrId(workoutId);
+      if (structFound) {
+        workout = {
+          id: structFound.id,
+          slug: structFound.slug,
+          title: structFound.title,
+          difficulty: structFound.difficulty,
+          learningObjective: structFound.problemStatement,
+          description: structFound.problemStatement,
+          instructions: `${structFound.inputFormat}\n${structFound.outputFormat}`,
+          starterCode: structFound.starterCode,
+          solutionCode: structFound.solutionCode,
+          concepts: structFound.concepts,
+          hints: structFound.hints,
+          visibleTestCases: structFound.visibleTestCases,
+          hiddenTestCases: structFound.hiddenTestCases,
+        };
       } else {
-        const allTopicGroups = [
-          PYTHON_TOPICS,
-          JAVASCRIPT_TOPICS,
-          TYPESCRIPT_TOPICS,
-          CPP_TOPICS,
-          JAVA_TOPICS,
-        ];
+        // Check AdminContentService (covers AI-generated and admin-modified workouts)
+        const adminFound = AdminContentService.getWorkoutById(workoutId);
+        if (adminFound) {
+          workout = adminFound;
+        } else {
+          const allTopicGroups = [
+            PYTHON_TOPICS,
+            JAVASCRIPT_TOPICS,
+            TYPESCRIPT_TOPICS,
+            CPP_TOPICS,
+            JAVA_TOPICS,
+          ];
 
-        for (const group of allTopicGroups) {
-          for (const topic of group) {
-            const found = topic.workouts.find(
-              (w) => w.id === workoutId || w.slug === workoutId
-            );
-            if (found) {
-              workout = found;
-              break;
+          for (const group of allTopicGroups) {
+            for (const topic of group) {
+              const found = topic.workouts.find(
+                (w) => w.id === workoutId || w.slug === workoutId
+              );
+              if (found) {
+                workout = found;
+                break;
+              }
             }
+            if (workout) break;
           }
-          if (workout) break;
         }
       }
     }
@@ -160,6 +181,21 @@ int main() {
     auto res = ${tc.stdin};
     std::cout << res << std::endl;
     return 0;
+}
+`;
+      } else if (languageId === "java") {
+        testHarness = `
+${sourceCode}
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            var res = Solution.${tc.stdin};
+            System.out.println(res);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    }
 }
 `;
       }
