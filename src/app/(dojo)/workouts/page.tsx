@@ -4,214 +4,156 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   Play,
-  CheckCircle2,
-  ArrowRight,
-  Sparkles,
+  Search,
+  BookOpen,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BeltBadge } from "@/components/dojo/belt";
+import { PYTHON_TOPICS, WorkoutData } from "@/data/python-curriculum";
 
-const WORKOUTS_LIST = [
-  {
-    slug: "find-the-largest-number",
-    title: "Find the Largest Number",
-    topic: "Loops & Iterations",
-    difficulty: "easy",
-    belt: "yellow" as const,
-    learningObjective: "Loops, comparisons, maximum tracking variable",
-    status: "in_progress",
-    isTargeted: false,
-    estimatedMinutes: 15,
-  },
-  {
-    slug: "even-index-filter",
-    title: "Filter Elements at Even Indices",
-    topic: "Loops & Indexing",
-    difficulty: "easy",
-    belt: "yellow" as const,
-    learningObjective: "Range stepping, modulo arithmetic, index boundaries",
-    status: "not_started",
-    isTargeted: true,
-    estimatedMinutes: 12,
-  },
-  {
-    slug: "reverse-a-string-loop",
-    title: "Reverse String using Loop",
-    topic: "Loops & Strings",
-    difficulty: "medium",
-    belt: "yellow" as const,
-    learningObjective: "Accumulator pattern, string immutability",
-    status: "completed",
-    isTargeted: false,
-    estimatedMinutes: 15,
-  },
-  {
-    slug: "sum-of-positive-numbers",
-    title: "Sum of Positive Numbers Only",
-    topic: "Conditions & Loops",
-    difficulty: "intro",
-    belt: "white" as const,
-    learningObjective: "Conditional summation, comparison checks",
-    status: "completed",
-    isTargeted: false,
-    estimatedMinutes: 10,
-  },
-  {
-    slug: "count-vowels-in-text",
-    title: "Count Vowels in Sentence",
-    topic: "Loops & Sets",
-    difficulty: "easy",
-    belt: "yellow" as const,
-    learningObjective: "Membership checking with `in`, case normalization",
-    status: "not_started",
-    isTargeted: false,
-    estimatedMinutes: 12,
-  },
-  {
-    slug: "calculate-factorial-iterative",
-    title: "Calculate Factorial (Iterative)",
-    topic: "Loops & Math",
-    difficulty: "medium",
-    belt: "orange" as const,
-    learningObjective: "Multiplicative accumulators, edge case zero",
-    status: "not_started",
-    isTargeted: false,
-    estimatedMinutes: 20,
-  },
-];
-
-export default function WorkoutsPage() {
-  const [filter, setFilter] = useState("all");
+export default function WorkoutsCatalogPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
 
-  const filteredWorkouts = WORKOUTS_LIST.filter((w) => {
-    if (filter === "targeted" && !w.isTargeted) return false;
-    if (filter === "completed" && w.status !== "completed") return false;
-    if (searchQuery) {
-      return (
-        w.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        w.topic.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const allWorkouts: { workout: WorkoutData; topicTitle: string }[] = [];
+  for (const topic of PYTHON_TOPICS) {
+    for (const w of topic.workouts) {
+      allWorkouts.push({ workout: w, topicTitle: topic.title });
     }
+  }
+
+  const filtered = allWorkouts.filter(({ workout, topicTitle }) => {
+    const matchesSearch =
+      workout.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      workout.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      topicTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      workout.concepts.some((c) => c.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (!matchesSearch) return false;
+    if (selectedDifficulty !== "all" && workout.difficulty !== selectedDifficulty) return false;
     return true;
   });
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Coding Workouts
+    <div className="space-y-8 pb-16 max-w-7xl mx-auto">
+      {/* Header Banner */}
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="purple">DOJO Catalog</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">
+              {allWorkouts.length} Interactive Coding Workouts
+            </span>
+          </div>
+          <h1 className="font-heading text-3xl sm:text-4xl font-black text-[#1E293B]">
+            Coding Workouts Catalog
           </h1>
-          <p className="text-sm text-zinc-500">
-            Interactive programming challenges that enforce cognitive reasoning and active execution
+          <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
+            Challenge yourself with automated test suites, error feedback, and progressive AI assistance.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="purple" className="py-1 px-3">
-            Python
-          </Badge>
         </div>
       </div>
 
-      {/* Filter and Search Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215]">
-        <div className="flex items-center gap-1.5 w-full sm:w-auto">
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 p-2 rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] flex-wrap">
           <Button
             size="sm"
-            variant={filter === "all" ? "primary" : "ghost"}
-            onClick={() => setFilter("all")}
+            variant={selectedDifficulty === "all" ? "primary" : "secondary"}
+            onClick={() => setSelectedDifficulty("all")}
+            className="text-xs"
           >
-            All Workouts
+            All ({allWorkouts.length})
           </Button>
           <Button
             size="sm"
-            variant={filter === "targeted" ? "primary" : "ghost"}
-            onClick={() => setFilter("targeted")}
-            className="gap-1.5"
+            variant={selectedDifficulty === "intro" ? "mint" : "secondary"}
+            onClick={() => setSelectedDifficulty("intro")}
+            className="text-xs"
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span>Targeted Weaknesses</span>
+            Introductory
           </Button>
           <Button
             size="sm"
-            variant={filter === "completed" ? "primary" : "ghost"}
-            onClick={() => setFilter("completed")}
+            variant={selectedDifficulty === "easy" ? "yellow" : "secondary"}
+            onClick={() => setSelectedDifficulty("easy")}
+            className="text-xs"
           >
-            Completed
+            Easy
+          </Button>
+          <Button
+            size="sm"
+            variant={selectedDifficulty === "medium" ? "pink" : "secondary"}
+            onClick={() => setSelectedDifficulty("medium")}
+            className="text-xs"
+          >
+            Medium
+          </Button>
+          <Button
+            size="sm"
+            variant={selectedDifficulty === "hard" ? "primary" : "secondary"}
+            onClick={() => setSelectedDifficulty("hard")}
+            className="text-xs"
+          >
+            Hard
           </Button>
         </div>
 
-        <div className="w-full sm:w-64">
+        <div className="relative">
+          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] stroke-[2.5]" />
           <input
             type="text"
             placeholder="Search workouts or concepts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-zinc-900 dark:text-zinc-100"
+            className="pl-9.5 pr-4 py-2 rounded-full border-2 border-[#1E293B] bg-white text-xs font-medium text-[#1E293B] placeholder-[#94A3B8] w-full sm:w-64 shadow-[3px_3px_0_#1E293B] focus:outline-none focus:border-[#8B5CF6]"
           />
         </div>
       </div>
 
       {/* Workouts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredWorkouts.map((workout) => (
-          <Card
-            key={workout.slug}
-            hoverable
-            className={`flex flex-col justify-between ${
-              workout.isTargeted
-                ? "border-indigo-500/40 dark:border-indigo-500/40 bg-indigo-50/15 dark:bg-indigo-950/15"
-                : ""
-            }`}
-          >
-            <CardHeader>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map(({ workout, topicTitle }) => (
+          <Card key={workout.slug} hoverable shadowVariant="hard" className="p-6 flex flex-col justify-between bg-white">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BeltBadge belt={workout.belt} size="sm" showIcon={false} />
-                  {workout.isTargeted && (
-                    <Badge variant="amber" className="text-[10px]">
-                      Targeted Weakness
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-xs font-mono text-zinc-400">
-                  {workout.estimatedMinutes}m
+                <Badge variant={workout.difficulty === "easy" ? "success" : workout.difficulty === "medium" ? "warning" : "purple"} className="text-[10px]">
+                  {workout.difficulty}
+                </Badge>
+                <span className="text-xs font-mono font-bold text-[#64748B]">
+                  {topicTitle}
                 </span>
               </div>
-              <CardTitle className="text-base mt-2">{workout.title}</CardTitle>
-              <CardDescription className="text-xs">
-                {workout.learningObjective}
-              </CardDescription>
-            </CardHeader>
 
-            <CardContent>
-              <div className="flex items-center justify-between text-xs pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                <div className="flex items-center gap-1.5">
-                  {workout.status === "completed" ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Passed
-                    </span>
-                  ) : workout.status === "in_progress" ? (
-                    <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                      <Play className="h-3.5 w-3.5" /> In Progress
-                    </span>
-                  ) : (
-                    <span className="text-zinc-400 font-mono">Not Started</span>
-                  )}
-                </div>
+              <h3 className="font-heading text-lg font-bold text-[#1E293B]">
+                {workout.title}
+              </h3>
 
-                <Link href={`/workouts/${workout.slug}`}>
-                  <Button size="sm" variant={workout.isTargeted ? "accent" : "outline"} className="gap-1">
-                    <span>Train</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </Button>
-                </Link>
+              <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2 font-medium">
+                {workout.description}
+              </p>
+
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {workout.concepts.map((c) => (
+                  <Badge key={c} variant="secondary" className="text-[9px] py-0 px-2">
+                    {c}
+                  </Badge>
+                ))}
               </div>
-            </CardContent>
+            </div>
+
+            <div className="mt-6 pt-4 border-t-2 border-[#1E293B]/10 flex items-center justify-between">
+              <span className="text-xs font-mono font-bold text-[#64748B]">
+                {workout.visibleTestCases.length + workout.hiddenTestCases.length} Tests
+              </span>
+              <Link href={`/workouts/${workout.slug}`}>
+                <Button size="sm" variant="primary" className="gap-1.5 text-xs shadow-[3px_3px_0_#1E293B]">
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                  <span>Train</span>
+                </Button>
+              </Link>
+            </div>
           </Card>
         ))}
       </div>

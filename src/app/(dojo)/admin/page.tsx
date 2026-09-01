@@ -5,20 +5,13 @@ import Link from "next/link";
 import {
   ShieldAlert,
   Plus,
-  Edit,
   Copy,
   Trash2,
-  CheckCircle2,
-  XCircle,
   Eye,
   Sparkles,
-  Filter,
   Search,
-  ArrowRight,
-  Code2,
-  Terminal,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdminWorkout } from "@/lib/admin/service";
@@ -98,28 +91,28 @@ export default function AdminWorkoutsDashboardPage() {
   });
 
   return (
-    <div className="space-y-6 pb-16 max-w-6xl">
+    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
       {/* Admin Header */}
-      <div className="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Badge variant="purple" className="gap-1">
-              <ShieldAlert className="h-3 w-3" />
+            <Badge variant="purple" className="gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5 stroke-[2.5]" />
               <span>Admin Portal</span>
             </Badge>
-            <span className="text-xs text-zinc-400 font-mono">DOJO Curriculum Management</span>
+            <span className="text-xs text-[#64748B] font-mono font-bold">DOJO Curriculum Moderation</span>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Workouts &amp; Content Moderation
+          <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#1E293B]">
+            Workouts &amp; Content Review
           </h1>
-          <p className="text-xs text-zinc-500">
-            Create, review, approve AI-generated submissions, and manage workout test suites.
+          <p className="text-xs sm:text-sm text-[#64748B] font-medium">
+            Author, test, approve AI-generated submissions, and manage workout test suites.
           </p>
         </div>
 
         <Link href="/admin/workouts/new">
-          <Button size="sm" className="gap-1.5 shadow-sm">
-            <Plus className="h-4 w-4" />
+          <Button size="sm" variant="primary" className="gap-1.5 shadow-[4px_4px_0_#1E293B]">
+            <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Create New Workout</span>
           </Button>
         </Link>
@@ -127,10 +120,10 @@ export default function AdminWorkoutsDashboardPage() {
 
       {/* Filter Tabs & Search */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215]">
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_#1E293B] flex-wrap">
           <Button
             size="sm"
-            variant={selectedFilter === "all" ? "primary" : "ghost"}
+            variant={selectedFilter === "all" ? "primary" : "secondary"}
             onClick={() => setSelectedFilter("all")}
             className="text-xs"
           >
@@ -138,16 +131,16 @@ export default function AdminWorkoutsDashboardPage() {
           </Button>
           <Button
             size="sm"
-            variant={selectedFilter === "pending" ? "primary" : "ghost"}
+            variant={selectedFilter === "pending" ? "yellow" : "secondary"}
             onClick={() => setSelectedFilter("pending")}
-            className="text-xs gap-1.5 text-amber-600 dark:text-amber-400"
+            className="text-xs gap-1.5"
           >
-            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-[#1E293B] inline-block" />
             <span>Pending Review ({workouts.filter((w) => w.approvalStatus === "pending_review").length})</span>
           </Button>
           <Button
             size="sm"
-            variant={selectedFilter === "published" ? "primary" : "ghost"}
+            variant={selectedFilter === "published" ? "mint" : "secondary"}
             onClick={() => setSelectedFilter("published")}
             className="text-xs"
           >
@@ -155,31 +148,31 @@ export default function AdminWorkoutsDashboardPage() {
           </Button>
           <Button
             size="sm"
-            variant={selectedFilter === "ai_generated" ? "primary" : "ghost"}
+            variant={selectedFilter === "ai_generated" ? "pink" : "secondary"}
             onClick={() => setSelectedFilter("ai_generated")}
             className="text-xs gap-1"
           >
-            <Sparkles className="h-3 w-3 text-indigo-500" />
+            <Sparkles className="h-3 w-3 stroke-[2.5]" />
             <span>AI Generated</span>
           </Button>
         </div>
 
         <div className="relative">
-          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] stroke-[2.5]" />
           <input
             type="text"
             placeholder="Search workouts or concepts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 w-full sm:w-64 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="pl-9.5 pr-4 py-2 rounded-full border-2 border-[#1E293B] bg-white text-xs font-medium text-[#1E293B] placeholder-[#94A3B8] w-full sm:w-64 shadow-[3px_3px_0_#1E293B] focus:outline-none focus:border-[#8B5CF6]"
           />
         </div>
       </div>
 
       {/* Workouts Table / List */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {filtered.map((w) => (
-          <Card key={w.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <Card key={w.id} shadowVariant="hard" className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={w.isPublished ? "success" : "secondary"} className="text-[10px]">
@@ -188,7 +181,7 @@ export default function AdminWorkoutsDashboardPage() {
 
                 {w.approvalStatus === "pending_review" && (
                   <Badge variant="warning" className="text-[10px] gap-1">
-                    <Sparkles className="h-2.5 w-2.5" />
+                    <Sparkles className="h-3 w-3 stroke-[2.5]" />
                     <span>Requires Admin Approval</span>
                   </Badge>
                 )}
@@ -197,20 +190,20 @@ export default function AdminWorkoutsDashboardPage() {
                   {w.difficulty}
                 </Badge>
 
-                <span className="text-[11px] font-mono text-zinc-400">
+                <span className="text-xs font-mono font-bold text-[#64748B]">
                   Topic: {w.topicId}
                 </span>
               </div>
 
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+              <h3 className="font-heading text-base font-bold text-[#1E293B]">
                 {w.title}
               </h3>
 
-              <p className="text-xs text-zinc-500 line-clamp-1 max-w-2xl">
+              <p className="text-xs text-[#64748B] line-clamp-1 max-w-2xl font-medium">
                 {w.description}
               </p>
 
-              <div className="flex items-center gap-3 text-[11px] text-zinc-400 font-mono">
+              <div className="flex items-center gap-3 text-xs text-[#64748B] font-mono font-bold">
                 <span>{w.visibleTestCases.length} Visible Tests</span>
                 <span>•</span>
                 <span>{w.hiddenTestCases.length} Hidden Tests</span>
@@ -223,7 +216,7 @@ export default function AdminWorkoutsDashboardPage() {
             <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
               <Button
                 size="sm"
-                variant={w.isPublished ? "outline" : "accent"}
+                variant={w.isPublished ? "outline" : "yellow"}
                 onClick={() => handleTogglePublish(w.id)}
                 className="text-xs"
               >
@@ -232,28 +225,28 @@ export default function AdminWorkoutsDashboardPage() {
 
               <Button
                 size="sm"
-                variant="ghost"
+                variant="secondary"
                 onClick={() => handleDuplicate(w.id)}
                 title="Duplicate Workout"
-                className="text-xs text-zinc-500"
+                className="text-xs px-2.5"
               >
-                <Copy className="h-3.5 w-3.5" />
+                <Copy className="h-3.5 w-3.5 stroke-[2.5]" />
               </Button>
 
               <Link href={`/workouts/${w.slug}`}>
-                <Button size="sm" variant="ghost" title="Preview Workspace" className="text-xs text-zinc-500">
-                  <Eye className="h-3.5 w-3.5" />
+                <Button size="sm" variant="secondary" title="Preview Workspace" className="text-xs px-2.5">
+                  <Eye className="h-3.5 w-3.5 stroke-[2.5]" />
                 </Button>
               </Link>
 
               <Button
                 size="sm"
-                variant="ghost"
+                variant="danger"
                 onClick={() => handleDelete(w.id)}
                 title="Delete Workout"
-                className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="text-xs px-2.5"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5 stroke-[2.5]" />
               </Button>
             </div>
           </Card>

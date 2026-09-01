@@ -2,55 +2,153 @@
 
 @layer base {
   :root {
-    --background: #fcfcfd;
-    --foreground: #09090b;
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
-    --border: #e4e4e7;
-    --card: #ffffff;
-    --card-foreground: #09090b;
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-foreground: #ffffff;
-    --accent: #f59e0b;
-    --accent-foreground: #18181b;
-  }
+    /* Playful Geometric Design System Tokens */
+    --background: #FFFDF5;
+    --foreground: #1E293B;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    
+    --accent: #8B5CF6;
+    --accent-foreground: #FFFFFF;
+    
+    --secondary: #F472B6;
+    --secondary-foreground: #1E293B;
+    
+    --tertiary: #FBBF24;
+    --tertiary-foreground: #1E293B;
+    
+    --quaternary: #34D399;
+    --quaternary-foreground: #1E293B;
+    
+    --border: #1E293B;
+    --border-subtle: #E2E8F0;
+    
+    --card: #FFFFFF;
+    --card-foreground: #1E293B;
+    
+    --input: #FFFFFF;
+    --ring: #8B5CF6;
 
-  .dark {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --muted: #18181b;
-    --muted-foreground: #a1a1aa;
-    --border: #27272a;
-    --card: #121215;
-    --card-foreground: #fafafa;
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-foreground: #ffffff;
-    --accent: #fbbf24;
-    --accent-foreground: #18181b;
+    /* Hard Shadow Tokens */
+    --shadow-pop: 4px 4px 0 #1E293B;
+    --shadow-pop-hover: 6px 6px 0 #1E293B;
+    --shadow-pop-active: 2px 2px 0 #1E293B;
+    --shadow-card: 8px 8px 0 #E2E8F0;
+    --shadow-featured: 8px 8px 0 #F472B6;
+    --shadow-pop-yellow: 6px 6px 0 #FBBF24;
+    --shadow-pop-violet: 6px 6px 0 #8B5CF6;
+    --shadow-pop-mint: 6px 6px 0 #34D399;
+
+    /* Transition Easing */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbar for clean IDE-like feel */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Playful Geometric Shadows */
+.shadow-pop {
+  box-shadow: var(--shadow-pop);
+}
+
+.shadow-pop-hover {
+  transition: transform 0.15s var(--ease-spring), box-shadow 0.15s var(--ease-spring);
+}
+
+.shadow-pop-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-pop-hover);
+}
+
+.shadow-pop-hover:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-pop-active);
+}
+
+.shadow-card-hard {
+  box-shadow: 6px 6px 0 #1E293B;
+}
+
+.shadow-card-featured {
+  box-shadow: 8px 8px 0 #F472B6;
+}
+
+.shadow-card-yellow {
+  box-shadow: 8px 8px 0 #FBBF24;
+}
+
+.shadow-card-mint {
+  box-shadow: 8px 8px 0 #34D399;
+}
+
+/* Geometric Dot & Grid Patterns */
+.bg-dojo-dots {
+  background-image: radial-gradient(#1E293B 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0;
+}
+
+.bg-dojo-grid {
+  background-image: 
+    linear-gradient(to right, rgba(30, 41, 59, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 41, 59, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.bg-dojo-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(30, 41, 59, 0.04),
+    rgba(30, 41, 59, 0.04) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+/* Tactile Chunky Borders */
+.border-chunky {
+  border: 2px solid #1E293B;
+}
+
+.border-chunky-subtle {
+  border: 2px solid #E2E8F0;
+}
+
+/* Custom Tactical Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
+
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #FFFDF5;
+  border-left: 2px solid #1E293B;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: rgba(150, 150, 150, 0.25);
+  background: #FBBF24;
+  border: 2px solid #1E293B;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0.4);
+  background: #8B5CF6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+  }
 }

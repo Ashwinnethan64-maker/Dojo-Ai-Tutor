@@ -10,7 +10,9 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     | "warning"
     | "danger"
     | "purple"
-    | "amber";
+    | "pink"
+    | "amber"
+    | "mint";
 }
 
 export function Badge({
@@ -20,27 +22,31 @@ export function Badge({
 }: BadgeProps) {
   const variantStyles = {
     default:
-      "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 hover:bg-zinc-800",
+      "bg-[#1E293B] text-white shadow-[2px_2px_0_#1E293B]",
     secondary:
-      "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
+      "bg-[#F1F5F9] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
     outline:
-      "border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300",
+      "bg-white text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
     success:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+      "bg-[#34D399] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
     warning:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+      "bg-[#FBBF24] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
     danger:
-      "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20",
+      "bg-[#F43F5E] text-white shadow-[2px_2px_0_#1E293B]",
     purple:
-      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
+      "bg-[#8B5CF6] text-white shadow-[2px_2px_0_#1E293B]",
+    pink:
+      "bg-[#F472B6] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
     amber:
-      "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20",
+      "bg-[#FBBF24] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
+    mint:
+      "bg-[#34D399] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
   };
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium transition-colors select-none",
+        "inline-flex items-center rounded-full border-2 border-[#1E293B] px-3 py-0.5 font-heading text-xs font-bold uppercase tracking-wider select-none",
         variantStyles[variant],
         className
       )}

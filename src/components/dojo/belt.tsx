@@ -17,72 +17,72 @@ export const BELT_CONFIG: Record<
     textClass: string;
     borderClass: string;
     barColor: string;
-    accentGlow: string;
+    pillShadow: string;
   }
 > = {
   white: {
     name: "White Belt",
-    bgClass: "bg-zinc-100 dark:bg-zinc-800",
-    textClass: "text-zinc-700 dark:text-zinc-200",
-    borderClass: "border-zinc-300 dark:border-zinc-700",
-    barColor: "#e4e4e7",
-    accentGlow: "rgba(228, 228, 231, 0.2)",
+    bgClass: "bg-white",
+    textClass: "text-[#1E293B]",
+    borderClass: "border-[#1E293B]",
+    barColor: "#E2E8F0",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   yellow: {
     name: "Yellow Belt",
-    bgClass: "bg-yellow-500/15 dark:bg-yellow-400/15",
-    textClass: "text-yellow-600 dark:text-yellow-400",
-    borderClass: "border-yellow-400/30",
-    barColor: "#eab308",
-    accentGlow: "rgba(234, 179, 8, 0.25)",
+    bgClass: "bg-[#FBBF24]",
+    textClass: "text-[#1E293B]",
+    borderClass: "border-[#1E293B]",
+    barColor: "#F59E0B",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   orange: {
     name: "Orange Belt",
-    bgClass: "bg-amber-500/15 dark:bg-amber-400/15",
-    textClass: "text-amber-600 dark:text-amber-400",
-    borderClass: "border-amber-500/30",
-    barColor: "#f97316",
-    accentGlow: "rgba(249, 115, 22, 0.25)",
+    bgClass: "bg-[#FB923C]",
+    textClass: "text-[#1E293B]",
+    borderClass: "border-[#1E293B]",
+    barColor: "#EA580C",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   green: {
     name: "Green Belt",
-    bgClass: "bg-emerald-500/15 dark:bg-emerald-400/15",
-    textClass: "text-emerald-600 dark:text-emerald-400",
-    borderClass: "border-emerald-500/30",
-    barColor: "#10b981",
-    accentGlow: "rgba(16, 185, 129, 0.25)",
+    bgClass: "bg-[#34D399]",
+    textClass: "text-[#1E293B]",
+    borderClass: "border-[#1E293B]",
+    barColor: "#059669",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   blue: {
     name: "Blue Belt",
-    bgClass: "bg-blue-500/15 dark:bg-blue-400/15",
-    textClass: "text-blue-600 dark:text-blue-400",
-    borderClass: "border-blue-500/30",
-    barColor: "#3b82f6",
-    accentGlow: "rgba(59, 130, 246, 0.25)",
+    bgClass: "bg-[#60A5FA]",
+    textClass: "text-[#1E293B]",
+    borderClass: "border-[#1E293B]",
+    barColor: "#2563EB",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   purple: {
     name: "Purple Belt",
-    bgClass: "bg-indigo-500/15 dark:bg-indigo-400/15",
-    textClass: "text-indigo-600 dark:text-indigo-400",
-    borderClass: "border-indigo-500/30",
-    barColor: "#8b5cf6",
-    accentGlow: "rgba(139, 92, 246, 0.25)",
+    bgClass: "bg-[#A78BFA]",
+    textClass: "text-[#1E293B]",
+    borderClass: "border-[#1E293B]",
+    barColor: "#7C3AED",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   brown: {
     name: "Brown Belt",
-    bgClass: "bg-amber-800/20 dark:bg-amber-900/40",
-    textClass: "text-amber-700 dark:text-amber-300",
-    borderClass: "border-amber-800/40",
-    barColor: "#78350f",
-    accentGlow: "rgba(120, 53, 15, 0.25)",
+    bgClass: "bg-[#B45309]",
+    textClass: "text-white",
+    borderClass: "border-[#1E293B]",
+    barColor: "#78350F",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
   black: {
     name: "Black Belt",
-    bgClass: "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950",
-    textClass: "text-zinc-900 dark:text-zinc-50 font-bold",
-    borderClass: "border-zinc-800 dark:border-zinc-300",
-    barColor: "#18181b",
-    accentGlow: "rgba(0, 0, 0, 0.4)",
+    bgClass: "bg-[#1E293B]",
+    textClass: "text-white",
+    borderClass: "border-[#1E293B]",
+    barColor: "#000000",
+    pillShadow: "shadow-[2px_2px_0_#1E293B]",
   },
 };
 
@@ -95,25 +95,26 @@ export function BeltBadge({
   const config = BELT_CONFIG[belt] || BELT_CONFIG.white;
 
   const sizeStyles = {
-    sm: "px-2 py-0.5 text-[11px] gap-1",
-    md: "px-2.5 py-1 text-xs gap-1.5",
-    lg: "px-3.5 py-1.5 text-sm gap-2 font-semibold",
+    sm: "px-2.5 py-0.5 text-[10px] gap-1",
+    md: "px-3 py-1 text-xs gap-1.5",
+    lg: "px-4 py-1.5 text-sm gap-2 font-bold",
   };
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-md border font-medium uppercase tracking-wider select-none",
+        "inline-flex items-center rounded-full border-2 font-heading font-bold uppercase tracking-wider select-none",
         config.bgClass,
         config.textClass,
         config.borderClass,
+        config.pillShadow,
         sizeStyles[size],
         className
       )}
     >
       {showIcon && (
         <span
-          className="inline-block w-2 h-2 rounded-full"
+          className="inline-block w-2.5 h-2.5 rounded-full border border-[#1E293B]"
           style={{ backgroundColor: config.barColor }}
         />
       )}
@@ -141,34 +142,33 @@ export function BeltCard({
     <div
       onClick={onClick}
       className={cn(
-        "relative flex flex-col p-4 rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden",
-        "bg-white dark:bg-[#121215]",
+        "relative flex flex-col p-5 rounded-2xl border-2 border-[#1E293B] transition-all duration-200 cursor-pointer overflow-hidden bg-white",
         isActive
-          ? "border-indigo-500/60 shadow-md ring-1 ring-indigo-500/20"
-          : "border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"
+          ? "shadow-[6px_6px_0_#8B5CF6] -translate-y-0.5 bg-[#FFFDF5]"
+          : "shadow-[6px_6px_0_#1E293B] hover:-translate-y-1 hover:shadow-[8px_8px_0_#1E293B]"
       )}
     >
-      {/* Martial Arts Belt Strip Indicator */}
+      {/* Martial Arts Belt Indicator Strip */}
       <div
-        className="absolute top-0 left-0 bottom-0 w-1.5"
+        className="absolute top-0 left-0 bottom-0 w-2.5 border-r-2 border-[#1E293B]"
         style={{ backgroundColor: config.barColor }}
       />
 
-      <div className="pl-2 flex items-center justify-between">
+      <div className="pl-3 flex items-center justify-between">
         <div>
-          <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-400">
+          <span className="text-[10px] font-heading font-bold uppercase tracking-widest text-[#64748B]">
             {language}
           </span>
-          <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+          <h4 className="font-heading text-base font-bold text-[#1E293B]">
             {config.name}
           </h4>
         </div>
         <BeltBadge belt={belt} size="sm" />
       </div>
 
-      <div className="pl-2 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center justify-between text-xs text-zinc-500">
-        <span>Mastery</span>
-        <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
+      <div className="pl-3 mt-4 pt-3 border-t-2 border-[#1E293B]/10 flex items-center justify-between text-xs font-semibold text-[#64748B]">
+        <span>Mastery Level</span>
+        <span className="font-heading font-bold text-sm text-[#1E293B]">
           {progress}%
         </span>
       </div>

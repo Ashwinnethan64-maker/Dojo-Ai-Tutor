@@ -6,18 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Save,
-  CheckCircle2,
-  AlertTriangle,
-  Code2,
-  Terminal,
-  Layers,
-  HelpCircle,
-  Plus,
-  Trash2,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 export default function AdminNewWorkoutPage() {
   const router = useRouter();
@@ -81,40 +72,40 @@ export default function AdminNewWorkoutPage() {
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-6 pb-16 max-w-5xl">
+    <form onSubmit={handleSave} className="space-y-6 pb-16 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <Link
           href="/admin"
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+          className="inline-flex items-center gap-2 text-xs font-heading font-bold text-[#1E293B] hover:text-[#8B5CF6]"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
           <span>Back to Admin Portal</span>
         </Link>
 
-        <Button type="submit" isLoading={isSaving} className="gap-1.5 shadow-sm">
-          <Save className="h-4 w-4" />
+        <Button type="submit" variant="primary" isLoading={isSaving} className="gap-2 shadow-[4px_4px_0_#1E293B]">
+          <Save className="h-4 w-4 stroke-[2.5]" />
           <span>Publish Workout</span>
         </Button>
       </div>
 
-      <div className="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] space-y-1">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white shadow-[8px_8px_0_#1E293B] space-y-1">
+        <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#1E293B]">
           Create New Coding Workout
         </h1>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs sm:text-sm text-[#64748B] font-medium">
           Author a new structured workout with canonical solution and multi-tier test cases.
         </p>
       </div>
 
       {/* Basic Metadata */}
-      <Card className="p-6 space-y-4">
-        <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+      <Card shadowVariant="hard" className="p-6 space-y-4 bg-white">
+        <h2 className="font-heading text-base font-bold text-[#1E293B]">
           1. Basic Information &amp; Taxonomy
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
               Workout Title *
             </label>
             <input
@@ -123,12 +114,12 @@ export default function AdminNewWorkoutPage() {
               placeholder="e.g. Double All Positive Elements"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-medium text-[#1E293B] focus:outline-none focus:border-[#8B5CF6]"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
               URL Slug *
             </label>
             <input
@@ -137,20 +128,20 @@ export default function AdminNewWorkoutPage() {
               placeholder="e.g. double-positive-elements"
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs font-mono"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-mono font-medium text-[#1E293B] focus:outline-none focus:border-[#8B5CF6]"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
               Curriculum Topic
             </label>
             <select
               value={formData.topicId}
               onChange={(e) => setFormData({ ...formData, topicId: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-bold text-[#1E293B] focus:outline-none"
             >
               <option value="intro">Introduction</option>
               <option value="variables">Variables &amp; Types</option>
@@ -163,13 +154,13 @@ export default function AdminNewWorkoutPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
               Difficulty Tier
             </label>
             <select
               value={formData.difficulty}
               onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
-              className="w-full p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-bold text-[#1E293B] focus:outline-none"
             >
               <option value="intro">Introductory</option>
               <option value="easy">Easy (White/Yellow Belt)</option>
@@ -181,7 +172,7 @@ export default function AdminNewWorkoutPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+          <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
             Learning Objective *
           </label>
           <input
@@ -190,12 +181,12 @@ export default function AdminNewWorkoutPage() {
             placeholder="e.g. Master list comprehension iteration with condition filters"
             value={formData.learningObjective}
             onChange={(e) => setFormData({ ...formData, learningObjective: e.target.value })}
-            className="w-full p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs"
+            className="w-full px-4 py-2.5 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-medium text-[#1E293B] focus:outline-none focus:border-[#8B5CF6]"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+          <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
             Problem Description (Markdown) *
           </label>
           <textarea
@@ -204,20 +195,20 @@ export default function AdminNewWorkoutPage() {
             placeholder="Write clear instructions, input constraints, and return specs..."
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-xs"
+            className="w-full px-4 py-2.5 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-medium text-[#1E293B] focus:outline-none focus:border-[#8B5CF6]"
           />
         </div>
       </Card>
 
       {/* Code Stubs & Canonical Solution */}
-      <Card className="p-6 space-y-4">
-        <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+      <Card shadowVariant="hard" className="p-6 space-y-4 bg-white">
+        <h2 className="font-heading text-base font-bold text-[#1E293B]">
           2. Code Stubs &amp; Canonical Solution
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
               Starter Code (Student Template) *
             </label>
             <textarea
@@ -225,12 +216,12 @@ export default function AdminNewWorkoutPage() {
               required
               value={formData.starterCode}
               onChange={(e) => setFormData({ ...formData, starterCode: e.target.value })}
-              className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-[#16161a] text-zinc-100 font-mono text-xs"
+              className="w-full p-3 rounded-xl border-2 border-[#1E293B] bg-[#1E1E1E] text-white font-mono text-xs focus:outline-none"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="font-heading text-xs font-bold uppercase tracking-wider text-[#1E293B]">
               Canonical Solution Code *
             </label>
             <textarea
@@ -238,15 +229,15 @@ export default function AdminNewWorkoutPage() {
               required
               value={formData.solutionCode}
               onChange={(e) => setFormData({ ...formData, solutionCode: e.target.value })}
-              className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-[#16161a] text-emerald-300 font-mono text-xs"
+              className="w-full p-3 rounded-xl border-2 border-[#1E293B] bg-[#1E1E1E] text-[#34D399] font-mono text-xs focus:outline-none"
             />
           </div>
         </div>
       </Card>
 
       <div className="flex justify-end">
-        <Button type="submit" isLoading={isSaving} size="lg" className="gap-2 shadow-md">
-          <Save className="h-4 w-4" />
+        <Button type="submit" variant="primary" isLoading={isSaving} size="lg" className="gap-2 shadow-[6px_6px_0_#1E293B]">
+          <Save className="h-4 w-4 stroke-[2.5]" />
           <span>Publish Workout</span>
         </Button>
       </div>

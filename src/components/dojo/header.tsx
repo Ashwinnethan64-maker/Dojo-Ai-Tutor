@@ -1,90 +1,146 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import {
   Bell,
+  Search,
   Code2,
   ChevronDown,
-  Moon,
-  Sun,
   Menu,
+  LogOut,
+  User as UserIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BeltBadge } from "@/components/dojo/belt";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
-export interface HeaderProps {
-  onToggleMobileMenu?: () => void;
-}
+export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
+  const [selectedLang] = useState("Python 3.12");
+  const [user, setUser] = useState<User | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [, startTransition] = useTransition();
 
-export function Header({ onToggleMobileMenu }: HeaderProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+      }
+    });
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    startTransition(() => {
+      window.location.href = "/login";
+    });
   };
 
-  return (
-    <header className="h-16 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-[#0e0e11]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-20 shrink-0">
-      <div className="flex items-center gap-3">
-        {onToggleMobileMenu && (
-          <button
-            onClick={onToggleMobileMenu}
-            className="md:hidden p-2 rounded-lg text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        )}
+  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Warrior";
+  const initial = displayName.charAt(0).toUpperCase();
 
-        {/* Quick Language Selector */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 cursor-pointer hover:border-zinc-300 transition-colors">
-          <Code2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-          <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-            Python Core
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
+  return (
+    <header className="h-18 border-b-2 border-[#1E293B] bg-white px-4 sm:px-8 flex items-center justify-between shrink-0 select-none relative z-30">
+      {/* Left Area: Mobile Menu + Search */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={onMenuClick}
+          className="lg:hidden"
+        >
+          <Menu className="h-4 w-4 stroke-[2.5]" />
+        </Button>
+
+        <div className="relative hidden sm:block">
+          <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] stroke-[2.5]" />
+          <input
+            type="text"
+            placeholder="Search workouts, concepts, traps..."
+            className="pl-9.5 pr-4 py-2 rounded-full border-2 border-[#1E293B] bg-[#FFFDF5] text-xs font-medium text-[#1E293B] placeholder-[#94A3B8] w-64 md:w-80 shadow-[2px_2px_0_#1E293B] focus:outline-none focus:border-[#8B5CF6] focus:shadow-[4px_4px_0_#8B5CF6]"
+          />
         </div>
       </div>
 
+      {/* Right Area: Language Selector + User Identity */}
       <div className="flex items-center gap-3">
-        {/* Theme Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleDarkMode}
-          className="text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
-        >
-          {isDarkMode ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
+        {/* Language Selector Pill */}
+        <div className="relative">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-1.5 bg-[#FFFDF5]"
+          >
+            <Code2 className="h-3.5 w-3.5 text-[#8B5CF6] stroke-[2.5]" />
+            <span className="font-heading font-bold">{selectedLang}</span>
+            <ChevronDown className="h-3.5 w-3.5 text-[#64748B] stroke-[2.5]" />
+          </Button>
+        </div>
+
+        <div className="h-6 w-0.5 bg-[#1E293B]/20 hidden sm:block" />
+
+        {/* User Identity Pill & Dropdown */}
+        <div className="relative">
+          <div
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="flex items-center gap-2.5 pl-1 cursor-pointer"
+          >
+            <BeltBadge belt="yellow" size="sm" className="hidden md:inline-flex" />
+
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                referrerPolicy="no-referrer"
+                className="h-9 w-9 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B] object-cover hover:rotate-6 transition-transform"
+              />
+            ) : (
+              <div className="h-9 w-9 rounded-full border-2 border-[#1E293B] bg-[#FBBF24] text-[#1E293B] flex items-center justify-center font-heading font-black text-sm shadow-[2px_2px_0_#1E293B] hover:rotate-6 transition-transform">
+                {initial}
+              </div>
+            )}
+          </div>
+
+          {/* Quick User Dropdown */}
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl border-2 border-[#1E293B] bg-white p-2 shadow-[6px_6px_0_#1E293B] space-y-1">
+              <div className="px-3 py-2 border-b-2 border-[#1E293B]/10">
+                <p className="font-heading font-black text-xs text-[#1E293B] truncate">{displayName}</p>
+                <p className="text-[10px] text-[#64748B] font-mono truncate">{user?.email || "Signed in"}</p>
+              </div>
+
+              <Link
+                href="/profile"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-heading font-bold text-[#1E293B] hover:bg-[#FFFDF5] rounded-xl"
+              >
+                <UserIcon className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>My Profile</span>
+              </Link>
+
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-heading font-bold text-[#EF4444] hover:bg-[#EF4444]/10 rounded-xl transition-colors cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5 stroke-[2.5]" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           )}
-        </Button>
-
-        {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-600" />
-        </Button>
-
-        {/* User Profile avatar */}
-        <div className="flex items-center gap-2.5 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-          <div className="w-8 h-8 rounded-full bg-linear-to-tr from-indigo-600 to-purple-500 flex items-center justify-center text-white font-semibold text-xs shadow-xs">
-            A
-          </div>
-          <div className="hidden md:block text-left">
-            <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
-              Ashwin
-            </p>
-            <p className="text-[10px] text-zinc-500 font-mono">Yellow Belt</p>
-          </div>
         </div>
       </div>
     </header>

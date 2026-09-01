@@ -4,198 +4,135 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   TrendingUp,
-  Award,
-  Flame,
-  Zap,
-  Target,
-  CheckCircle2,
-  Lock,
-  ChevronRight,
-  Shield,
-  Layers,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { BeltBadge } from "@/components/dojo/belt";
-import { ProgressionService, BELT_REQUIREMENTS } from "@/lib/progression/service";
+import { BELT_REQUIREMENTS } from "@/lib/progression/service";
+import { BeltTier } from "@/types";
 
-export default function ProgressPage() {
-  const progression = ProgressionService.getUserProgression();
-  const currentReq = BELT_REQUIREMENTS[progression.currentBelt];
-  const nextReq = progression.nextBelt ? BELT_REQUIREMENTS[progression.nextBelt] : null;
+const ALL_BELTS: BeltTier[] = ["white", "yellow", "orange", "green", "blue", "purple", "brown", "black"];
+
+export default function ProgressionPage() {
+  const [selectedBelt, setSelectedBelt] = useState<BeltTier>("yellow");
+
+  const tier = BELT_REQUIREMENTS[selectedBelt] || BELT_REQUIREMENTS.yellow;
 
   return (
-    <div className="space-y-8 pb-16 max-w-6xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Dojo Progression &amp; Belt Elevation
+    <div className="space-y-8 pb-16 max-w-7xl mx-auto">
+      {/* Header Banner */}
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="purple">Dojo Ranks</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">
+              8 Martial Arts Belts
+            </span>
+          </div>
+          <h1 className="font-heading text-3xl sm:text-4xl font-black text-[#1E293B]">
+            Belt Progression &amp; Mastery Ledger
           </h1>
-          <p className="text-sm text-zinc-500">
-            Authentic advancement unlocked through demonstrated understanding, consistency, and retention
+          <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
+            Belts are earned through genuine problem solving, concept mastery, and active retention. No shortcuts.
           </p>
         </div>
+
         <div className="flex items-center gap-3">
-          <BeltBadge belt={progression.currentBelt} size="md" />
+          <BeltBadge belt="yellow" size="lg" />
         </div>
       </div>
 
-      {/* Belt Elevation Pathway Banner */}
-      <Card className="p-6 sm:p-8 border-indigo-500/30 dark:border-indigo-500/30 bg-linear-to-br from-white via-zinc-50/50 to-indigo-50/20 dark:from-[#121215] dark:via-[#121215] dark:to-indigo-950/20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
+      {/* Belts Stepper / Selector Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        {ALL_BELTS.map((belt) => {
+          const isCurrent = belt === "yellow";
+          const isAchieved = belt === "white" || belt === "yellow";
+          return (
+            <div
+              key={belt}
+              onClick={() => setSelectedBelt(belt)}
+              className={`p-3 rounded-2xl border-2 border-[#1E293B] cursor-pointer transition-all duration-150 text-center space-y-1.5 bg-white ${
+                selectedBelt === belt
+                  ? "shadow-[4px_4px_0_#8B5CF6] -translate-y-1 bg-[#FFFDF5]"
+                  : "shadow-[2px_2px_0_#1E293B] hover:-translate-y-0.5"
+              }`}
+            >
+              <BeltBadge belt={belt} size="sm" showIcon={false} className="w-full justify-center text-[10px]" />
+              <p className="text-[10px] font-heading font-bold text-[#64748B]">
+                {isCurrent ? "Current Belt" : isAchieved ? "Achieved ✓" : "Locked 🔒"}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Selected Belt Requirements Detail */}
+      <Card shadowVariant="hard" className="p-6 sm:p-8 space-y-6 bg-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-400">
-                Active Training Rank
+              <BeltBadge belt={tier.belt} size="md" />
+              <span className="text-xs text-[#64748B] font-mono font-bold">
+                Required XP: {tier.xpThreshold} XP
               </span>
-              <BeltBadge belt={progression.currentBelt} size="sm" />
-              <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
-              {progression.nextBelt && <BeltBadge belt={progression.nextBelt} size="sm" />}
             </div>
-
-            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              Yellow Belt &rarr; Orange Belt Elevation
+            <h2 className="font-heading text-2xl font-black text-[#1E293B]">
+              {tier.belt.toUpperCase()} Belt Advancement Criteria
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-500 max-w-xl">
-              Belt elevation requires passing all 4 authentic performance criteria. Click through lessons alone will not award belts.
-            </p>
           </div>
 
-          <div className="text-right shrink-0">
-            <div className="text-3xl font-bold font-mono text-zinc-900 dark:text-zinc-50">
-              {progression.beltProgressPercent}%
-            </div>
-            <span className="text-xs text-zinc-400">Progression Completed</span>
-          </div>
+          <Link href="/workouts">
+            <Button variant="primary" size="sm" className="shadow-[4px_4px_0_#1E293B] gap-1.5 text-xs">
+              <span>Train For This Belt</span>
+              <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />
+            </Button>
+          </Link>
         </div>
 
-        {/* Requirements Checklist Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80">
-          {/* Req 1: Mastery */}
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-500 font-medium">1. Overall Mastery</span>
-              <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                {progression.overallMastery}% / {currentReq.minOverallMastery}%
-              </span>
-            </div>
-            <Progress value={(progression.overallMastery / currentReq.minOverallMastery) * 100} variant="accent" />
-            <span className="text-[10px] text-zinc-400 font-mono">
-              {progression.overallMastery >= currentReq.minOverallMastery ? "✓ Requirement Met" : "Needs 1% more"}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B] space-y-1">
+            <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#64748B]">
+              Minimum Mastery
             </span>
+            <p className="font-heading text-2xl font-black text-[#1E293B]">
+              {tier.minOverallMastery}%
+            </p>
+            <p className="text-[10px] text-[#64748B] font-medium">Weighted multi-signal score</p>
           </div>
 
-          {/* Req 2: Workouts */}
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-500 font-medium">2. Completed Workouts</span>
-              <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                {progression.completedWorkoutsCount} / {currentReq.minCompletedWorkouts}
-              </span>
-            </div>
-            <Progress value={(progression.completedWorkoutsCount / currentReq.minCompletedWorkouts) * 100} variant="primary" />
-            <span className="text-[10px] text-zinc-400 font-mono">
-              {progression.completedWorkoutsCount >= currentReq.minCompletedWorkouts ? "✓ Requirement Met" : "2 workouts remaining"}
+          <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B] space-y-1">
+            <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#64748B]">
+              Solved Workouts
             </span>
+            <p className="font-heading text-2xl font-black text-[#1E293B]">
+              {tier.minCompletedWorkouts} Completed
+            </p>
+            <p className="text-[10px] text-[#64748B] font-medium">Unique passing submissions</p>
           </div>
 
-          {/* Req 3: Retention */}
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-500 font-medium">3. FSRS Retention</span>
-              <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                {progression.flashcardRetention}% / {currentReq.minFlashcardRetention}%
-              </span>
-            </div>
-            <Progress value={100} variant="success" />
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-              ✓ Requirement Met (92%)
+          <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B] space-y-1">
+            <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#64748B]">
+              Memory Retention
             </span>
+            <p className="font-heading text-2xl font-black text-[#059669]">
+              {tier.minFlashcardRetention}% FSRS
+            </p>
+            <p className="text-[10px] text-[#64748B] font-medium">Active recall retention</p>
           </div>
 
-          {/* Req 4: Critical Weakness */}
-          <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-500 font-medium">4. Critical Weaknesses</span>
-              <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                {progression.unresolvedCriticalMistakes} &le; {currentReq.maxUnresolvedCriticalMistakes}
-              </span>
-            </div>
-            <Progress value={50} variant="success" />
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-              ✓ Within Allowed Threshold
+          <div className="p-4 rounded-2xl bg-[#FFFDF5] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B] space-y-1">
+            <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#64748B]">
+              Critical Weaknesses
             </span>
+            <p className="font-heading text-2xl font-black text-[#8B5CF6]">
+              &le; {tier.maxUnresolvedCriticalMistakes} Max
+            </p>
+            <p className="text-[10px] text-[#64748B] font-medium">Allowed unresolved traps</p>
           </div>
         </div>
       </Card>
-
-      {/* Stats Summary & XP Ledger */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Experience & Streak */}
-        <div className="space-y-4">
-          <Card className="p-5 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-zinc-500 font-medium">Total Experience</span>
-              <p className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50 mt-0.5">
-                {progression.totalXP} XP
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-              <Zap className="h-5 w-5 fill-current" />
-            </div>
-          </Card>
-
-          <Card className="p-5 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-zinc-500 font-medium">Active Streak</span>
-              <p className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50 mt-0.5">
-                {progression.streakDays} Days
-              </p>
-              <span className="text-[11px] text-zinc-400 font-mono">
-                Longest: {progression.longestStreak} Days
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <Flame className="h-5 w-5 fill-current" />
-            </div>
-          </Card>
-        </div>
-
-        {/* XP Audit Ledger */}
-        <Card className="lg:col-span-2 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Recent XP Activity Ledger</CardTitle>
-              <CardDescription className="text-xs">
-                Verified experience awarded strictly for demonstrated cognitive effort
-              </CardDescription>
-            </div>
-          </div>
-
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
-            {progression.xpHistory.map((item, idx) => (
-              <div key={idx} className="py-3 flex items-center justify-between text-xs">
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-zinc-800 dark:text-zinc-200">
-                    {item.description}
-                  </p>
-                  <span className="text-[10px] text-zinc-400 font-mono">
-                    {item.source.replace(/_/g, " ")} • {item.timestamp}
-                  </span>
-                </div>
-                <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                  +{item.amount} XP
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }

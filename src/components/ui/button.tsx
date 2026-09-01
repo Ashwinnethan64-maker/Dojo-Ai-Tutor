@@ -3,7 +3,15 @@ import { cn } from "@/lib/utils";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "accent";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "outline"
+    | "ghost"
+    | "danger"
+    | "yellow"
+    | "pink"
+    | "mint";
   size?: "sm" | "md" | "lg" | "icon";
   isLoading?: boolean;
 }
@@ -21,29 +29,34 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    // 2px solid border, tactile hard shadow, spring transition
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]";
+      "inline-flex items-center justify-center font-heading font-bold rounded-full border-2 border-[#1E293B] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#1E293B]";
 
     const variantStyles = {
       primary:
-        "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm focus:ring-indigo-500 shadow-indigo-500/20",
+        "bg-[#8B5CF6] text-white shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B] hover:bg-[#7C3AED]",
       secondary:
-        "bg-zinc-100 hover:bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 focus:ring-zinc-400",
+        "bg-white text-[#1E293B] shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B] hover:bg-[#FBBF24]",
       outline:
-        "border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 focus:ring-zinc-400",
+        "bg-transparent text-[#1E293B] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B] hover:bg-[#F1F5F9] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_#1E293B]",
       ghost:
-        "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 focus:ring-zinc-400",
+        "border-transparent text-[#1E293B] hover:bg-[#F1F5F9] hover:border-[#1E293B] shadow-none",
       danger:
-        "bg-red-600 hover:bg-red-700 text-white shadow-sm focus:ring-red-500 shadow-red-500/20",
-      accent:
-        "bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold shadow-sm focus:ring-amber-400 shadow-amber-500/20",
+        "bg-[#EF4444] text-white shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B]",
+      yellow:
+        "bg-[#FBBF24] text-[#1E293B] shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B] hover:bg-[#F59E0B]",
+      pink:
+        "bg-[#F472B6] text-[#1E293B] shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B]",
+      mint:
+        "bg-[#34D399] text-[#1E293B] shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B]",
     };
 
     const sizeStyles = {
-      sm: "text-xs px-2.5 py-1.5 gap-1.5",
-      md: "text-sm px-4 py-2 gap-2",
-      lg: "text-base px-5 py-2.5 gap-2.5",
-      icon: "p-2 aspect-square",
+      sm: "text-xs px-3.5 py-1.5 gap-1.5 min-h-[36px]",
+      md: "text-sm px-5 py-2.5 gap-2 min-h-[44px]",
+      lg: "text-base px-6 py-3 gap-2.5 min-h-[48px]",
+      icon: "p-2.5 aspect-square min-h-[44px] min-w-[44px]",
     };
 
     return (

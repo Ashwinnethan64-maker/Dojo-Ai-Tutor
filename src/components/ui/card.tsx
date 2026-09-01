@@ -3,15 +3,31 @@ import { cn } from "@/lib/utils";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hoverable?: boolean;
+  shadowVariant?: "hard" | "featured" | "yellow" | "mint" | "subtle" | "none";
 }
 
-export function Card({ className, hoverable = false, ...props }: CardProps) {
+export function Card({
+  className,
+  hoverable = false,
+  shadowVariant = "hard",
+  ...props
+}: CardProps) {
+  const shadowClasses = {
+    hard: "shadow-[6px_6px_0_#1E293B]",
+    featured: "shadow-[8px_8px_0_#F472B6]",
+    yellow: "shadow-[8px_8px_0_#FBBF24]",
+    mint: "shadow-[8px_8px_0_#34D399]",
+    subtle: "shadow-[6px_6px_0_#E2E8F0]",
+    none: "shadow-none",
+  };
+
   return (
     <div
       className={cn(
-        "rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#121215] text-zinc-950 dark:text-zinc-50 shadow-sm",
+        "rounded-2xl border-2 border-[#1E293B] bg-white text-[#1E293B] transition-all duration-200",
+        shadowClasses[shadowVariant],
         hoverable &&
-          "transition-all duration-200 hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-0.5",
+          "hover:-translate-y-1 hover:shadow-[8px_8px_0_#1E293B] hover:rotate-[-0.5deg]",
         className
       )}
       {...props}
@@ -25,7 +41,7 @@ export function CardHeader({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex flex-col space-y-1.5 p-5 pb-3", className)}
+      className={cn("flex flex-col space-y-1.5 p-6 pb-3", className)}
       {...props}
     />
   );
@@ -38,7 +54,7 @@ export function CardTitle({
   return (
     <h3
       className={cn(
-        "text-lg font-semibold leading-none tracking-tight text-zinc-900 dark:text-zinc-100",
+        "font-heading text-lg font-bold leading-tight tracking-tight text-[#1E293B]",
         className
       )}
       {...props}
@@ -53,7 +69,7 @@ export function CardDescription({
   return (
     <p
       className={cn(
-        "text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed",
+        "text-sm text-[#64748B] leading-relaxed",
         className
       )}
       {...props}
@@ -65,7 +81,7 @@ export function CardContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-5 pt-0", className)} {...props} />;
+  return <div className={cn("p-6 pt-0", className)} {...props} />;
 }
 
 export function CardFooter({
@@ -75,7 +91,7 @@ export function CardFooter({
   return (
     <div
       className={cn(
-        "flex items-center p-5 pt-0 border-t border-zinc-100 dark:border-zinc-800/50 mt-4",
+        "flex items-center p-6 pt-0 border-t-2 border-[#1E293B]/10 mt-4",
         className
       )}
       {...props}

@@ -1,42 +1,88 @@
 "use client";
 
-import React from "react";
-import { Calendar, Code2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Calendar, Code2, Shield, Flame, Zap, LogOut } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { BeltBadge } from "@/components/dojo/belt";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 export default function ProfilePage() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+      }
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  };
+
+  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Ashwin";
+  const userEmail = user?.email || "ashwin@example.com";
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
-    <div className="space-y-6 pb-12 max-w-4xl">
+    <div className="space-y-6 pb-12 max-w-4xl mx-auto">
       {/* Profile Header Card */}
-      <Card className="p-6 sm:p-8">
+      <Card shadowVariant="hard" className="p-6 sm:p-8 bg-white">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-linear-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-md shrink-0">
-            A
-          </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              referrerPolicy="no-referrer"
+              className="w-20 h-20 rounded-3xl border-2 border-[#1E293B] shadow-[4px_4px_0_#1E293B] object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-3xl bg-[#8B5CF6] border-2 border-[#1E293B] flex items-center justify-center text-white text-3xl font-heading font-black shadow-[4px_4px_0_#1E293B] shrink-0">
+              {initial}
+            </div>
+          )}
 
           <div className="space-y-2 text-center sm:text-left flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                  Ashwin
+                <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#1E293B]">
+                  {displayName}
                 </h1>
-                <p className="text-xs text-zinc-500 font-mono">@ashwin_coder</p>
+                <p className="text-xs text-[#64748B] font-mono font-bold">{userEmail}</p>
               </div>
-              <BeltBadge belt="yellow" size="md" />
+              <div className="flex items-center gap-2 justify-center sm:justify-end">
+                <BeltBadge belt="yellow" size="md" />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSignOut}
+                  className="text-xs gap-1 border-[#EF4444] text-[#EF4444] hover:bg-[#EF4444]/10"
+                >
+                  <LogOut className="h-3.5 w-3.5 stroke-[2.5]" />
+                  <span>Sign Out</span>
+                </Button>
+              </div>
             </div>
 
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">
-              Passionate software practitioner working through Python foundations and algorithm reasoning in DOJO AI.
+            <p className="text-xs text-[#64748B] font-medium leading-relaxed">
+              Passionate software practitioner working through Python foundations and algorithmic reasoning in DOJO AI.
             </p>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-zinc-500">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-zinc-400" />
-                Joined August 2026
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2 text-xs font-heading font-bold text-[#64748B]">
+              <span className="flex items-center gap-1.5 bg-[#FFFDF5] px-3 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
+                <Calendar className="h-3.5 w-3.5 text-[#64748B] stroke-[2.5]" />
+                Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "August 2026"}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Code2 className="h-3.5 w-3.5 text-indigo-500" />
+              <span className="flex items-center gap-1.5 bg-[#FFFDF5] px-3 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
+                <Code2 className="h-3.5 w-3.5 text-[#8B5CF6] stroke-[2.5]" />
                 Primary Track: Python
               </span>
             </div>
@@ -45,30 +91,30 @@ export default function ProfilePage() {
       </Card>
 
       {/* Belts Earned & Milestones */}
-      <Card>
+      <Card shadowVariant="hard" className="bg-white">
         <CardHeader>
-          <CardTitle className="text-base">Dojo Belts &amp; Ranks</CardTitle>
+          <CardTitle className="text-lg">Dojo Belts &amp; Ranks</CardTitle>
           <CardDescription className="text-xs">
             Authentic progression tiers validated through demonstrated problem solving
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 text-center space-y-1">
-              <BeltBadge belt="white" size="sm" showIcon={false} />
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Achieved</p>
+            <div className="p-3 rounded-2xl border-2 border-[#1E293B] bg-[#FFFDF5] text-center space-y-1.5 shadow-[2px_2px_0_#1E293B]">
+              <BeltBadge belt="white" size="sm" showIcon={false} className="w-full justify-center" />
+              <p className="text-[11px] font-heading font-bold text-[#059669]">Achieved ✓</p>
             </div>
-            <div className="p-3 rounded-xl border border-indigo-500/50 bg-indigo-50/20 dark:bg-indigo-950/20 text-center space-y-1">
-              <BeltBadge belt="yellow" size="sm" showIcon={false} />
-              <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">Current Rank</p>
+            <div className="p-3 rounded-2xl border-2 border-[#1E293B] bg-[#FFFDF5] text-center space-y-1.5 shadow-[2px_2px_0_#1E293B]">
+              <BeltBadge belt="yellow" size="sm" showIcon={false} className="w-full justify-center" />
+              <p className="text-[11px] font-heading font-bold text-[#8B5CF6]">Current Belt 🥋</p>
             </div>
-            <div className="p-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 opacity-50 text-center space-y-1">
-              <BeltBadge belt="orange" size="sm" showIcon={false} />
-              <p className="text-[11px] text-zinc-400">Locked (74%)</p>
+            <div className="p-3 rounded-2xl border-2 border-[#1E293B] bg-white text-center space-y-1.5 opacity-60">
+              <BeltBadge belt="orange" size="sm" showIcon={false} className="w-full justify-center" />
+              <p className="text-[11px] font-heading font-bold text-[#64748B]">Next Goal</p>
             </div>
-            <div className="p-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 opacity-40 text-center space-y-1">
-              <BeltBadge belt="green" size="sm" showIcon={false} />
-              <p className="text-[11px] text-zinc-400">Locked</p>
+            <div className="p-3 rounded-2xl border-2 border-[#1E293B] bg-white text-center space-y-1.5 opacity-60">
+              <BeltBadge belt="green" size="sm" showIcon={false} className="w-full justify-center" />
+              <p className="text-[11px] font-heading font-bold text-[#64748B]">Locked</p>
             </div>
           </div>
         </CardContent>

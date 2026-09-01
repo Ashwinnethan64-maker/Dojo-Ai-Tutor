@@ -1,12 +1,6 @@
 import { MistakeAnalysis, MistakeAnalysisSchema } from "./schemas";
 import { SYSTEM_PROMPTS } from "./prompts";
-import { OpenAI } from "openai";
-
-function getOpenAIClient(): OpenAI | null {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey === "your-openai-api-key") return null;
-  return new OpenAI({ apiKey });
-}
+import { getNvidiaClient, getNvidiaModel } from "./nvidia";
 
 export class MistakeClassifierService {
   public static async classifyMistake(
@@ -14,15 +8,15 @@ export class MistakeClassifierService {
     errorOutput: string,
     topicSlug = "python-loops"
   ): Promise<MistakeAnalysis> {
-    const openai = getOpenAIClient();
+    const nvidia = getNvidiaClient();
 
-    if (!openai) {
+    if (!nvidia) {
       return this.generateFallbackAnalysis(code, errorOutput, topicSlug);
     }
 
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+      const completion = await nvidia.chat.completions.create({
+        model: getNvidiaModel(),
         messages: [
           { role: "system", content: SYSTEM_PROMPTS.MISTAKE_CLASSIFIER },
           {
@@ -46,7 +40,7 @@ export class MistakeClassifierService {
     errorOutput: string,
     topicSlug: string
   ): MistakeAnalysis {
-    if (errorOutput.includes("IndexError") || code.includes("len(") && code.includes("+ 1")) {
+    if (errorOutput.includes("IndexError") || (code.includes("len(") && code.includes("+ 1"))) {
       return {
         category: "off_by_one",
         conceptSlug: topicSlug,
@@ -60,30 +54,30 @@ export class MistakeClassifierService {
       };
     }
 
-    if (!code.includes("return") && code.includes("def ")) {
+    if (errorOutput.includes("SyntaxError")) {
       return {
-        category: "function_error",
+        category: "syntax_error",
         conceptSlug: topicSlug,
-        title: "Missing Return Statement",
-        explanation: "Function completed execution without returning an explicit value.",
-        rootCause: "Used print() instead of return statement.",
+        title: "Syntax Formulation Slip",
+        explanation: "Encountered invalid Python grammar such as missing colon or mismatched delimiters.",
+        rootCause: "Syntax error on line parsing.",
         severity: 2,
         confidence: 0.9,
         shouldGenerateFlashcard: true,
-        recommendedFollowup: "Return vs Print Practice",
+        recommendedFollowup: "Basic Syntax Drills",
       };
     }
 
     return {
       category: "logic_error",
       conceptSlug: topicSlug,
-      title: "Logic Discrepancy",
-      explanation: "Output did not align with expected test case behavior.",
-      rootCause: "Incorrect condition branch or missing boundary update.",
+      title: "Logical Reasoning Gap",
+      explanation: "Code executed cleanly but failed test assertion expectations.",
+      rootCause: "Function return did not match expected value for test case inputs.",
       severity: 2,
-      confidence: 0.8,
+      confidence: 0.85,
       shouldGenerateFlashcard: false,
-      recommendedFollowup: "Fundamental Logic Practice",
+      recommendedFollowup: "Condition & Branching Workouts",
     };
   }
 }

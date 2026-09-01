@@ -5,7 +5,7 @@ export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number; // 0 to 100
   max?: number;
   indicatorClassName?: string;
-  variant?: "primary" | "accent" | "success" | "danger";
+  variant?: "primary" | "secondary" | "success" | "accent" | "pink" | "yellow";
 }
 
 export function Progress({
@@ -16,30 +16,36 @@ export function Progress({
   variant = "primary",
   ...props
 }: ProgressProps) {
-  const percentage = Math.min(Math.max(0, (value / max) * 100), 100);
+  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
 
-  const variantColors = {
-    primary: "bg-indigo-600 dark:bg-indigo-500",
-    accent: "bg-amber-500 dark:bg-amber-400",
-    success: "bg-emerald-500",
-    danger: "bg-red-500",
+  const variantStyles = {
+    primary: "bg-[#8B5CF6]",
+    secondary: "bg-[#64748B]",
+    success: "bg-[#34D399]",
+    accent: "bg-[#FBBF24]",
+    pink: "bg-[#F472B6]",
+    yellow: "bg-[#FBBF24]",
   };
 
   return (
     <div
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={max}
       className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800",
+        "relative h-4 w-full overflow-hidden rounded-full border-2 border-[#1E293B] bg-[#FFFDF5] p-0.5 shadow-[2px_2px_0_#1E293B]",
         className
       )}
       {...props}
     >
       <div
         className={cn(
-          "h-full w-full flex-1 transition-all duration-300 ease-in-out rounded-full",
-          variantColors[variant],
+          "h-full rounded-full border-r border-[#1E293B] transition-all duration-500 ease-out",
+          variantStyles[variant],
           indicatorClassName
         )}
-        style={{ transform: `translateX(-${100 - percentage}%)` }}
+        style={{ width: `${percentage}%` }}
       />
     </div>
   );

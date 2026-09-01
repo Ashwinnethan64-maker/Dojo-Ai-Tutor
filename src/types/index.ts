@@ -59,7 +59,7 @@ export interface Language {
   id: string;
   name: string;
   monaco_id: string;
-  judge0_id: number;
+  onecompiler_id: string;
   is_active: boolean;
   created_at: string;
 }

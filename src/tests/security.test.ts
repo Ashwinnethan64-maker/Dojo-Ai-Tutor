@@ -8,9 +8,9 @@ import { ProgressionService } from "../lib/progression/service";
 describe("DOJO Security & Sandbox Guardrails Suite", () => {
   it("strictly prohibits dangerous environment keys from client bundle exposure", () => {
     const dangerousKeys = [
-      "OPENAI_API_KEY",
+      "NVIDIA_API_KEY",
       "SUPABASE_SERVICE_ROLE_KEY",
-      "JUDGE0_API_KEY",
+      "ONECOMPILER_API_KEY",
     ];
 
     dangerousKeys.forEach((key) => {

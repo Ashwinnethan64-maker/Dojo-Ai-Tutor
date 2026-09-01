@@ -13,9 +13,7 @@ import {
   Sparkles,
   TrendingUp,
   Compass,
-  CheckCircle2,
-  Clock,
-  BookOpen,
+  Code2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BeltBadge, BeltCard } from "@/components/dojo/belt";
 import { DashboardData } from "@/lib/dashboard/service";
+import { GeometricDecoration } from "@/components/dojo/geometric-decoration";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -43,31 +42,39 @@ export default function DashboardPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="flex items-center justify-center py-20 text-xs text-zinc-400">
-        Loading personalized Dojo dashboard...
+      <div className="flex flex-col items-center justify-center py-24 space-y-3">
+        <div className="w-10 h-10 rounded-full border-4 border-[#1E293B] border-t-[#8B5CF6] animate-spin shadow-[3px_3px_0_#1E293B]" />
+        <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">
+          Entering your personal coding dojo...
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* 1. Welcome & Primary Action Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] p-6 sm:p-8 shadow-xs">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="space-y-8 pb-16 max-w-7xl mx-auto">
+      {/* 1. Welcome & Primary Training Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl border-2 border-[#1E293B] bg-white p-6 sm:p-8 shadow-[8px_8px_0_#1E293B]">
+        {/* Playful Geometric Corner Accents */}
+        <div className="absolute top-4 right-4 hidden sm:flex items-center gap-2">
+          <GeometricDecoration variant="star" color="yellow" size="md" rotation={15} />
+          <GeometricDecoration variant="badge" color="pink" size="sm" />
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <BeltBadge belt={data.user.currentBelt} size="sm" />
-              <span className="text-xs text-zinc-400 font-mono">
+              <Badge variant="purple">
                 {data.user.currentLanguage} Track
-              </span>
+              </Badge>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Welcome back, {data.user.displayName}
+            <h1 className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#1E293B]">
+              Good morning, warrior {data.user.displayName}!
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm font-medium text-[#64748B] leading-relaxed">
               You are {data.user.beltProgressPercent}% towards your{" "}
-              <strong className="text-yellow-600 dark:text-yellow-400 font-semibold uppercase">
+              <strong className="font-heading font-black text-[#1E293B] uppercase underline decoration-[#FBBF24] decoration-4 underline-offset-2">
                 {data.user.nextBelt || "Black"} Belt
               </strong>
               . {data.primaryAction.subtitle}
@@ -76,40 +83,40 @@ export default function DashboardPage() {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Link href={`/workouts/${data.primaryAction.workoutSlug}`}>
-              <Button size="lg" className="w-full sm:w-auto shadow-md gap-2 text-sm font-semibold">
-                <Play className="h-4 w-4 fill-current" />
+              <Button size="lg" variant="primary" className="w-full sm:w-auto text-base gap-2 shadow-[6px_6px_0_#1E293B]">
+                <Play className="h-5 w-5 fill-current" />
                 <span>{data.primaryAction.buttonLabel}</span>
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Header Progress Indicators */}
-        <div className="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800/60 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-medium">
-              <span className="text-zinc-500">Overall Mastery</span>
-              <span className="font-mono text-zinc-900 dark:text-zinc-100">
+        {/* Progress Indicators Strip */}
+        <div className="mt-8 pt-6 border-t-2 border-[#1E293B]/10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-heading font-bold">
+              <span className="text-[#64748B]">Overall Concept Mastery</span>
+              <span className="text-[#1E293B]">
                 {data.masteryTrends.overallScore}%
               </span>
             </div>
-            <Progress value={data.masteryTrends.overallScore} variant="accent" />
+            <Progress value={data.masteryTrends.overallScore} variant="primary" />
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-medium">
-              <span className="text-zinc-500">Streak Momentum</span>
-              <span className="font-mono text-zinc-900 dark:text-zinc-100">
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-heading font-bold">
+              <span className="text-[#64748B]">Active Streak</span>
+              <span className="text-[#1E293B]">
                 {data.user.streakDays} Days
               </span>
             </div>
-            <Progress value={(data.user.streakDays / 7) * 100} variant="primary" />
+            <Progress value={(data.user.streakDays / 7) * 100} variant="yellow" />
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-medium">
-              <span className="text-zinc-500">Experience Points</span>
-              <span className="font-mono text-zinc-900 dark:text-zinc-100">
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-heading font-bold">
+              <span className="text-[#64748B]">Total Experience</span>
+              <span className="text-[#1E293B]">
                 {data.user.totalXP} XP
               </span>
             </div>
@@ -118,41 +125,41 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 2. Today's Training Grid */}
+      {/* 2. Today's Training Cards Grid */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            <h2 className="font-heading text-xl font-black text-[#1E293B]">
               Today&apos;s Training
             </h2>
-            <p className="text-xs text-zinc-500">Targeted workouts and memory reviews for this session</p>
+            <p className="text-xs text-[#64748B]">Targeted coding challenges and memory workouts for this session</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Workout Card */}
-          <Card hoverable className="flex flex-col justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Coding Workout Card */}
+          <Card hoverable shadowVariant="hard" className="flex flex-col justify-between">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <Badge variant="purple">Coding Workout</Badge>
-                <span className="text-xs text-zinc-400 font-mono">
-                  {data.todayTraining.codingWorkout.estimatedMinutes}m
+                <span className="text-xs font-heading font-bold text-[#64748B]">
+                  {data.todayTraining.codingWorkout.estimatedMinutes} mins
                 </span>
               </div>
-              <CardTitle className="text-base mt-2">
+              <CardTitle className="text-lg mt-3">
                 {data.todayTraining.codingWorkout.title}
               </CardTitle>
               <CardDescription className="text-xs">
-                Solve progressive problem with automated unit tests and feedback.
+                Solve progressive problem with automated unit tests and Sensei guidance.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between text-xs pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                <span className="text-zinc-400 font-mono">Difficulty: {data.todayTraining.codingWorkout.difficulty}</span>
+              <div className="flex items-center justify-between text-xs pt-4 border-t-2 border-[#1E293B]/10">
+                <span className="font-heading font-bold text-[#64748B]">Difficulty: {data.todayTraining.codingWorkout.difficulty}</span>
                 <Link href={`/workouts/${data.todayTraining.codingWorkout.slug}`}>
-                  <Button size="sm" variant="outline" className="gap-1.5">
+                  <Button size="sm" variant="secondary" className="gap-1.5">
                     <span>Train</span>
-                    <ArrowRight className="h-3 w-3" />
+                    <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />
                   </Button>
                 </Link>
               </div>
@@ -160,26 +167,26 @@ export default function DashboardPage() {
           </Card>
 
           {/* Flashcard Review Card */}
-          <Card hoverable className="flex flex-col justify-between">
+          <Card hoverable shadowVariant="yellow" className="flex flex-col justify-between bg-[#FFFDF5]">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <Badge variant="amber">Spaced Repetition</Badge>
-                <span className="text-xs text-amber-600 dark:text-amber-400 font-mono font-medium">
+                <Badge variant="warning">Spaced Repetition</Badge>
+                <span className="text-xs font-heading font-black text-[#1E293B] bg-[#FBBF24] px-2 py-0.5 rounded-full border border-[#1E293B]">
                   {data.todayTraining.flashcardsDueCount} Due
                 </span>
               </div>
-              <CardTitle className="text-base mt-2">Review Mistake Flashcards</CardTitle>
+              <CardTitle className="text-lg mt-3">Review Mistake Flashcards</CardTitle>
               <CardDescription className="text-xs">
                 Solidify active recall on syntax and logic errors fingerprinted from your workouts.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between text-xs pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                <span className="text-zinc-400 font-mono">FSRS Intervals</span>
+              <div className="flex items-center justify-between text-xs pt-4 border-t-2 border-[#1E293B]/10">
+                <span className="font-heading font-bold text-[#64748B]">FSRS Memory</span>
                 <Link href="/flashcards/review">
-                  <Button size="sm" variant="accent" className="gap-1.5">
-                    <RotateCcw className="h-3 w-3" />
-                    <span>Review Flashcards</span>
+                  <Button size="sm" variant="yellow" className="gap-1.5">
+                    <RotateCcw className="h-3.5 w-3.5 stroke-[2.5]" />
+                    <span>Review Cards</span>
                   </Button>
                 </Link>
               </div>
@@ -187,26 +194,26 @@ export default function DashboardPage() {
           </Card>
 
           {/* Weakness Challenge Card */}
-          <Card hoverable className="flex flex-col justify-between border-indigo-500/30 dark:border-indigo-500/30 bg-indigo-50/20 dark:bg-indigo-950/10">
+          <Card hoverable shadowVariant="featured" className="flex flex-col justify-between bg-white">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <Badge variant="danger">Weak Area Challenge</Badge>
-                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-medium">AI Targeted</span>
+                <Badge variant="pink">Weak Area Challenge</Badge>
+                <span className="text-xs font-heading font-bold text-[#8B5CF6]">AI Targeted</span>
               </div>
-              <CardTitle className="text-base mt-2">
+              <CardTitle className="text-lg mt-3">
                 {data.todayTraining.weaknessWorkout.title}
               </CardTitle>
               <CardDescription className="text-xs">
-                Target: {data.todayTraining.weaknessWorkout.targetConcept}
+                Target Concept: {data.todayTraining.weaknessWorkout.targetConcept}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between text-xs pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                <span className="text-zinc-400 font-mono">Adaptive Focus</span>
+              <div className="flex items-center justify-between text-xs pt-4 border-t-2 border-[#1E293B]/10">
+                <span className="font-heading font-bold text-[#64748B]">Adaptive Focus</span>
                 <Link href={`/workouts/${data.todayTraining.weaknessWorkout.slug}`}>
-                  <Button size="sm" className="gap-1.5">
-                    <Target className="h-3 w-3" />
-                    <span>Practice Weak Area</span>
+                  <Button size="sm" variant="pink" className="gap-1.5">
+                    <Target className="h-3.5 w-3.5 stroke-[2.5]" />
+                    <span>Practice Weakness</span>
                   </Button>
                 </Link>
               </div>
@@ -215,32 +222,32 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 3. Concept Mastery Breakdown & Recent Mistakes */}
+      {/* 3. Concept Mastery Breakdown & Mistake Memory */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Multi-Signal Concept Mastery */}
-        <Card className="lg:col-span-2">
+        {/* Concept Mastery Card */}
+        <Card shadowVariant="hard" className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Concept Mastery Breakdown</CardTitle>
+                <CardTitle className="text-lg">Concept Mastery Matrix</CardTitle>
                 <CardDescription className="text-xs">
-                  Real-time understanding scores calculated across pass momentum, hints, and error rates
+                  Real-time cognitive scores calculated across pass momentum, hints, and error frequency
                 </CardDescription>
               </div>
               <Link href="/progress">
-                <Button variant="ghost" size="sm" className="text-xs gap-1">
+                <Button variant="outline" size="sm" className="text-xs gap-1">
                   <span>Full Matrix</span>
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-3 w-3 stroke-[2.5]" />
                 </Button>
               </Link>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {data.masteryTrends.concepts.map((concept) => (
-              <div key={concept.conceptSlug} className="space-y-1.5">
-                <div className="flex justify-between text-xs">
+              <div key={concept.conceptSlug} className="space-y-1.5 p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] shadow-[3px_3px_0_#1E293B]">
+                <div className="flex justify-between text-xs font-heading font-bold">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                    <span className="text-[#1E293B]">
                       {concept.conceptTitle}
                     </span>
                     <Badge
@@ -251,18 +258,18 @@ export default function DashboardPage() {
                           ? "warning"
                           : "secondary"
                       }
-                      className="text-[10px] py-0 px-1.5"
+                      className="text-[10px] py-0 px-2"
                     >
                       {concept.trend}
                     </Badge>
                   </div>
-                  <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                  <span className="text-sm font-black text-[#1E293B]">
                     {concept.masteryScore}%
                   </span>
                 </div>
                 <Progress
                   value={concept.masteryScore}
-                  variant={concept.masteryScore >= 80 ? "success" : concept.masteryScore >= 60 ? "primary" : "accent"}
+                  variant={concept.masteryScore >= 80 ? "success" : concept.masteryScore >= 60 ? "primary" : "yellow"}
                 />
               </div>
             ))}
@@ -270,14 +277,14 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Mistakes Ledger */}
-        <Card className="flex flex-col justify-between">
+        <Card shadowVariant="hard" className="flex flex-col justify-between">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <CardTitle className="text-base">Recent Mistakes</CardTitle>
+              <AlertTriangle className="h-5 w-5 text-[#F59E0B] stroke-[2.5]" />
+              <CardTitle className="text-lg">Recent Mistakes</CardTitle>
             </div>
             <CardDescription className="text-xs">
-              Frequent patterns detected in your code
+              Frequent error patterns fingerprinted in your workouts
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -285,38 +292,35 @@ export default function DashboardPage() {
               data.recentMistakes.map((mistake) => (
                 <div
                   key={mistake.id}
-                  className="p-3 rounded-lg border border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20"
+                  className="p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] shadow-[3px_3px_0_#1E293B] space-y-1"
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  <div className="flex items-center justify-between">
+                    <span className="font-heading font-bold text-xs text-[#1E293B]">
                       {mistake.shortTitle}
                     </span>
                     <Badge variant="warning" className="text-[10px]">
-                      {mistake.occurrences}x recorded
+                      {mistake.occurrences}x seen
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
+                  <p className="text-xs text-[#64748B] line-clamp-2">
                     {mistake.description}
                   </p>
                 </div>
               ))
             ) : (
-              <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                    Off-by-One in Range()
-                  </span>
-                  <Badge variant="warning" className="text-[10px]">3x recorded</Badge>
-                </div>
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
+              <div className="p-3 rounded-xl border-2 border-[#1E293B] bg-[#FFFDF5] shadow-[3px_3px_0_#1E293B]">
+                <span className="font-heading font-bold text-xs text-[#1E293B]">
+                  Off-by-One in Range()
+                </span>
+                <p className="text-xs text-[#64748B] mt-1">
                   range(len(x)) upper limit was indexed inclusively leading to IndexError.
                 </p>
               </div>
             )}
 
-            <Link href="/mistakes" className="block pt-2 text-center">
-              <Button variant="ghost" size="sm" className="w-full text-xs text-indigo-600 dark:text-indigo-400">
-                Review Mistakes &rarr;
+            <Link href="/mistakes" className="block pt-3 text-center">
+              <Button variant="outline" size="sm" className="w-full text-xs">
+                Review Mistake Memory &rarr;
               </Button>
             </Link>
           </CardContent>
@@ -327,10 +331,10 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            <h2 className="font-heading text-xl font-black text-[#1E293B]">
               Belts &amp; Language Tracks
             </h2>
-            <p className="text-xs text-zinc-500">Unified martial arts progression across supported languages</p>
+            <p className="text-xs text-[#64748B]">Unified martial arts progression across supported languages</p>
           </div>
         </div>
 

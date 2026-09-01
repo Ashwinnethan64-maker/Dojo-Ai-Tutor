@@ -1,20 +1,14 @@
 import { FlashcardGeneration, FlashcardGenerationSchema, MistakeAnalysis } from "./schemas";
-import { OpenAI } from "openai";
-
-function getOpenAIClient(): OpenAI | null {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey === "your-openai-api-key") return null;
-  return new OpenAI({ apiKey });
-}
+import { getNvidiaClient, getNvidiaModel } from "./nvidia";
 
 export class FlashcardService {
   public static async generateFromMistake(
     mistake: MistakeAnalysis,
     codeSnippet: string
   ): Promise<FlashcardGeneration> {
-    const openai = getOpenAIClient();
+    const nvidia = getNvidiaClient();
 
-    if (!openai) {
+    if (!nvidia) {
       return this.generateFallbackFlashcard(mistake, codeSnippet);
     }
 
@@ -30,8 +24,8 @@ ${codeSnippet}
 
 Return JSON matching schema: { "frontQuestion": string, "backAnswer": string, "explanation": string, "conceptSlug": string }`;
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+      const completion = await nvidia.chat.completions.create({
+        model: getNvidiaModel(),
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
         temperature: 0.2,
@@ -61,20 +55,20 @@ Return JSON matching schema: { "frontQuestion": string, "backAnswer": string, "e
       };
     }
 
-    if (mistake.category === "function_error") {
+    if (mistake.category === "syntax_error") {
       return {
-        frontQuestion: "What is the return value of a Python function that uses print() without an explicit return statement?",
-        backAnswer: "None",
-        explanation: "print() outputs text to stdout, but the caller receives None unless `return` is explicitly called.",
+        frontQuestion: "Which operator checks equality rather than variable assignment in Python?",
+        backAnswer: "The '==' operator checks equality; '=' performs assignment.",
+        explanation: "Using '=' inside an 'if' clause results in a SyntaxError in Python.",
         conceptSlug: mistake.conceptSlug,
         codeContext: codeSnippet,
       };
     }
 
     return {
-      frontQuestion: `How do you avoid ${mistake.title} in Python?`,
-      backAnswer: mistake.rootCause,
-      explanation: mistake.explanation,
+      frontQuestion: `How do you avoid ${mistake.title}?`,
+      backAnswer: mistake.explanation,
+      explanation: mistake.rootCause,
       conceptSlug: mistake.conceptSlug,
       codeContext: codeSnippet,
     };

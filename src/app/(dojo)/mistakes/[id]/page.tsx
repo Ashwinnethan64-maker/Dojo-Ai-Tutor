@@ -4,17 +4,11 @@ import React, { use } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  AlertTriangle,
-  History,
-  TrendingDown,
   Target,
   Layers,
-  ArrowRight,
-  CheckCircle2,
-  Calendar,
   Code2,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -26,7 +20,6 @@ export default function MistakeDetailPage({
 }) {
   const resolvedParams = use(params);
 
-  // Realistic sample mistake detail for inspectability
   const mistake = {
     id: resolvedParams.id,
     title: "Off-by-One in Range() Upper Bound",
@@ -73,45 +66,45 @@ export default function MistakeDetailPage({
   };
 
   return (
-    <div className="space-y-8 pb-16 max-w-5xl">
+    <div className="space-y-8 pb-16 max-w-6xl mx-auto">
       {/* Back Link */}
       <div>
         <Link
           href="/mistakes"
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-heading font-bold text-[#1E293B] hover:text-[#8B5CF6] transition-colors"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
           <span>Back to Mistake Memory</span>
         </Link>
       </div>
 
       {/* Mistake Header Card */}
-      <div className="p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121215] flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs">
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Badge variant="warning">{mistake.category}</Badge>
-            <span className="text-xs text-zinc-400 font-mono">
-              Fingerprint Pattern #{mistake.id}
+            <span className="text-xs text-[#64748B] font-mono font-bold">
+              Pattern #{mistake.id}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+          <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#1E293B]">
             {mistake.title}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 max-w-2xl">
+          <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
             {mistake.description}
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <Link href="/flashcards">
-            <Button variant="outline" className="text-xs gap-1.5">
-              <Layers className="h-3.5 w-3.5" />
+            <Button variant="secondary" className="text-xs gap-1.5">
+              <Layers className="h-4 w-4 stroke-[2.5]" />
               <span>Review Flashcard</span>
             </Button>
           </Link>
           <Link href="/workouts/even-index-filter">
-            <Button className="text-xs gap-1.5 shadow-sm">
-              <Target className="h-3.5 w-3.5" />
+            <Button variant="primary" className="text-xs gap-1.5">
+              <Target className="h-4 w-4 stroke-[2.5]" />
               <span>Target Challenge</span>
             </Button>
           </Link>
@@ -121,32 +114,32 @@ export default function MistakeDetailPage({
       {/* Diagnostics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Root Cause & Diagnostic */}
-        <Card className="md:col-span-2 p-6 space-y-4">
+        <Card shadowVariant="hard" className="md:col-span-2 p-6 space-y-4 bg-white">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">
               Root Cause Diagnostic
             </span>
-            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#1E293B] mt-1 leading-relaxed font-medium bg-[#FFFDF5] p-3 rounded-xl border-2 border-[#1E293B]">
               {mistake.rootCause}
             </p>
           </div>
 
-          <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+          <div className="pt-3 border-t-2 border-[#1E293B]/10">
+            <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#8B5CF6]">
               Recommended Remediation Practice
             </span>
-            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 mt-1">
+            <p className="text-xs sm:text-sm text-[#1E293B] mt-1 font-medium bg-[#FBBF24]/20 p-3 rounded-xl border-2 border-[#1E293B]">
               {mistake.recommendedPractice}
             </p>
           </div>
 
-          <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+          <div className="pt-3 border-t-2 border-[#1E293B]/10">
+            <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">
               Related Concepts
             </span>
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {mistake.relatedConcepts.map((rc) => (
-                <Badge key={rc} variant="secondary" className="text-[10px]">
+                <Badge key={rc} variant="secondary" className="text-xs">
                   {rc}
                 </Badge>
               ))}
@@ -155,66 +148,64 @@ export default function MistakeDetailPage({
         </Card>
 
         {/* Pattern Stats & Trend */}
-        <Card className="p-6 space-y-4">
+        <Card shadowVariant="yellow" className="p-6 space-y-4 bg-[#FFFDF5]">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">
               Pattern Occurrences
             </span>
-            <p className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">
+            <p className="font-heading text-3xl font-black text-[#1E293B] mt-1">
               {mistake.occurrences}x Detected
             </p>
           </div>
 
-          <div className="space-y-1 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="flex justify-between text-xs font-medium">
-              <span className="text-zinc-500">Related Mastery</span>
-              <span className="font-mono text-zinc-900 dark:text-zinc-100">{mistake.mastery}%</span>
+          <div className="space-y-1.5 pt-2 border-t-2 border-[#1E293B]/10">
+            <div className="flex justify-between text-xs font-heading font-bold">
+              <span className="text-[#64748B]">Related Mastery</span>
+              <span className="text-[#1E293B]">{mistake.mastery}%</span>
             </div>
-            <Progress value={mistake.mastery} variant="accent" />
+            <Progress value={mistake.mastery} variant="yellow" />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs text-zinc-500">
+          <div className="space-y-2 pt-2 border-t-2 border-[#1E293B]/10 text-xs font-medium text-[#64748B]">
             <div className="flex justify-between">
               <span>First Detected:</span>
-              <span className="font-mono text-zinc-700 dark:text-zinc-300">{mistake.firstDetected}</span>
+              <span className="font-heading font-bold text-[#1E293B]">{mistake.firstDetected}</span>
             </div>
             <div className="flex justify-between">
               <span>Last Detected:</span>
-              <span className="font-mono text-zinc-700 dark:text-zinc-300">{mistake.lastDetected}</span>
+              <span className="font-heading font-bold text-[#1E293B]">{mistake.lastDetected}</span>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Linked Occurrences History */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-              Mistake Occurrences History ({mistake.occurrencesHistory.length})
-            </h2>
-            <p className="text-xs text-zinc-500">
-              Historical attempts where DOJO fingerprinted this identical trap
-            </p>
-          </div>
+      <div className="space-y-4">
+        <div>
+          <h2 className="font-heading text-xl font-black text-[#1E293B]">
+            Occurrences Audit Trail ({mistake.occurrencesHistory.length})
+          </h2>
+          <p className="text-xs text-[#64748B]">
+            Historical attempts where DOJO fingerprinted this identical error pattern
+          </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {mistake.occurrencesHistory.map((occ) => (
-            <Card key={occ.id} className="p-4 space-y-2">
+            <Card key={occ.id} shadowVariant="hard" className="p-5 space-y-3 bg-white">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                  <Code2 className="h-3.5 w-3.5 text-indigo-500" />
+                <span className="font-heading font-bold text-sm text-[#1E293B] flex items-center gap-2">
+                  <Code2 className="h-4 w-4 text-[#8B5CF6] stroke-[2.5]" />
                   {occ.workout}
                 </span>
-                <span className="text-zinc-400 font-mono text-[11px]">{occ.time}</span>
+                <span className="text-[#64748B] font-mono font-bold text-xs">{occ.time}</span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#1a1a1e] font-mono text-xs text-zinc-300">
+              <div className="p-3 rounded-xl bg-[#1E1E1E] text-white font-mono text-xs border-2 border-[#1E293B]">
                 <pre className="whitespace-pre-wrap">{occ.snippet}</pre>
               </div>
 
-              <p className="text-[11px] text-red-500 font-mono">
+              <p className="text-xs text-[#DC2626] font-mono font-bold bg-[#EF4444]/10 p-2 rounded-lg border border-[#EF4444]/20">
                 {occ.error}
               </p>
             </Card>

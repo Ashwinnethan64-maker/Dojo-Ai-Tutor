@@ -4,8 +4,9 @@ import React from "react";
 import Link from "next/link";
 import {
   Target,
+  Sparkles,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -66,113 +67,100 @@ const MISTAKES_LEDGER = [
 ];
 
 export default function MistakesPage() {
-
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Mistake Memory
+    <div className="space-y-8 pb-16 max-w-7xl mx-auto">
+      {/* Header Banner */}
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-[#1E293B] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0_#1E293B]">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="warning">Continuous Memory</Badge>
+            <span className="text-xs text-[#64748B] font-mono font-bold">
+              4 Patterns Fingerprinted
+            </span>
+          </div>
+          <h1 className="font-heading text-3xl font-black text-[#1E293B]">
+            Mistake Memory &amp; Cognitive Traps
           </h1>
-          <p className="text-sm text-zinc-500">
-            DOJO remembers your specific coding traps and converts them into long-term mastery
+          <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl font-medium">
+            DOJO automatically fingerprints your unique coding mistakes and converts recurring slips into targeted learning flashcards and challenges.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="warning" className="py-1 px-3">
-            4 Patterns Fingerprinted
-          </Badge>
         </div>
       </div>
 
       {/* Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <span className="text-xs text-zinc-500 font-medium">Active Weak Spots</span>
-          <p className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">
-            2
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <Card shadowVariant="hard" className="p-5 bg-white">
+          <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">Active Weak Spots</span>
+          <p className="font-heading text-3xl font-black text-[#1E293B] mt-1">
+            2 Areas
           </p>
-          <p className="text-[11px] text-zinc-400 mt-1">Occurred &gt; 2 times recently</p>
+          <p className="text-[11px] text-[#64748B] mt-1 font-medium">Occurred &gt; 2 times recently</p>
         </Card>
-        <Card className="p-4">
-          <span className="text-xs text-zinc-500 font-medium">Resolving / Improving</span>
-          <p className="text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-1">
-            1
+        <Card shadowVariant="yellow" className="p-5 bg-[#FFFDF5]">
+          <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">Improving Trends</span>
+          <p className="font-heading text-3xl font-black text-[#8B5CF6] mt-1">
+            2 Patterns
           </p>
-          <p className="text-[11px] text-zinc-400 mt-1">Error frequency decreasing</p>
+          <p className="text-[11px] text-[#64748B] mt-1 font-medium">Reduced frequency over 30 days</p>
         </Card>
-        <Card className="p-4">
-          <span className="text-xs text-zinc-500 font-medium">Mastered &amp; Resolved</span>
-          <p className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">
-            1
+        <Card shadowVariant="mint" className="p-5 bg-white">
+          <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#64748B]">Resolved Traps</span>
+          <p className="font-heading text-3xl font-black text-[#059669] mt-1">
+            1 Trap
           </p>
-          <p className="text-[11px] text-zinc-400 mt-1">No errors in last 5 attempts</p>
+          <p className="text-[11px] text-[#64748B] mt-1 font-medium">&gt; 90% mastery achieved</p>
         </Card>
       </div>
 
-      {/* Mistakes List */}
+      {/* Mistake Ledger List */}
       <div className="space-y-4">
-        {MISTAKES_LEDGER.map((mistake) => (
-          <Card key={mistake.id} hoverable>
-            <CardHeader className="pb-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={
-                      mistake.status === "resolved"
-                        ? "success"
-                        : mistake.status === "improving"
-                        ? "warning"
-                        : "danger"
-                    }
-                  >
-                    {mistake.category}
-                  </Badge>
-                  <span className="text-xs text-zinc-400 font-mono">
-                    {mistake.concept}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-zinc-400 font-mono">
-                  <span>Occurred: {mistake.occurrences}x</span>
-                  <span>Last: {mistake.lastSeen}</span>
-                </div>
-              </div>
-              <CardTitle className="text-base mt-2">{mistake.title}</CardTitle>
-              <CardDescription className="text-xs">{mistake.description}</CardDescription>
-            </CardHeader>
+        <h2 className="font-heading text-xl font-black text-[#1E293B]">
+          Fingerprinted Mistake Patterns
+        </h2>
 
-            <CardContent>
-              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex-1 max-w-xs space-y-1">
-                  <div className="flex justify-between text-[11px] font-medium">
-                    <span className="text-zinc-500">Related Concept Mastery</span>
-                    <span className="font-mono text-zinc-900 dark:text-zinc-100">{mistake.mastery}%</span>
+        <div className="space-y-4">
+          {MISTAKES_LEDGER.map((mistake) => (
+            <Card key={mistake.id} hoverable shadowVariant="hard" className="p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant={mistake.status === "resolved" ? "success" : "warning"} className="text-[10px]">
+                      {mistake.status.replace("_", " ")}
+                    </Badge>
+                    <Badge variant="purple" className="text-[10px]">
+                      {mistake.category}
+                    </Badge>
+                    <span className="text-xs font-mono font-bold text-[#64748B]">
+                      {mistake.concept} • Seen {mistake.occurrences}x ({mistake.lastSeen})
+                    </span>
                   </div>
-                  <Progress
-                    value={mistake.mastery}
-                    variant={mistake.mastery > 80 ? "success" : "accent"}
-                    className="h-1.5"
-                  />
+
+                  <h3 className="font-heading text-lg font-bold text-[#1E293B]">
+                    {mistake.title}
+                  </h3>
+
+                  <p className="text-xs text-[#64748B] leading-relaxed max-w-3xl font-medium">
+                    {mistake.description}
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
                   <Link href={`/mistakes/${mistake.id}`}>
-                    <Button size="sm" variant="outline" className="text-xs">
+                    <Button size="sm" variant="secondary" className="text-xs">
                       View Occurrences ({mistake.occurrences})
                     </Button>
                   </Link>
                   <Link href="/workouts/even-index-filter">
-                    <Button size="sm" className="text-xs gap-1">
-                      <Target className="h-3 w-3" />
+                    <Button size="sm" variant="primary" className="text-xs gap-1">
+                      <Target className="h-3.5 w-3.5 stroke-[2.5]" />
                       <span>Target Challenge</span>
                     </Button>
                   </Link>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
