@@ -1,28 +1,45 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import {
-  Bell,
+  Menu,
+  ChevronDown,
   Search,
   Code2,
-  ChevronDown,
-  Menu,
   LogOut,
   User as UserIcon,
+  Check,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BeltBadge } from "@/components/dojo/belt";
 import { getBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
+export const SUPPORTED_LANGUAGES = [
+  { id: "python", name: "Python 3.12", version: "3.12", badge: "Active Track", status: "ready" },
+  { id: "javascript", name: "JavaScript", version: "ES2024 / Node 20", badge: "Workouts Available", status: "ready" },
+  { id: "typescript", name: "TypeScript", version: "5.4", badge: "Workouts Available", status: "ready" },
+  { id: "cpp", name: "C++ (GCC 13)", version: "C++20", badge: "Workouts Available", status: "ready" },
+  { id: "java", name: "Java (OpenJDK 21)", version: "21", badge: "Workouts Available", status: "ready" },
+  { id: "rust", name: "Rust 1.78", version: "2021", badge: "Workouts Available", status: "ready" },
+  { id: "go", name: "Go 1.22", version: "1.22", badge: "Workouts Available", status: "ready" },
+];
+
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-  const [selectedLang] = useState("Python 3.12");
+  const [selectedLang, setSelectedLang] = useState<string>("Python 3.12");
+  const [isLangOpen, setIsLangOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
+    const saved = localStorage.getItem("dojo_active_language");
+    if (saved) {
+      setSelectedLang(saved);
+    }
+
     const supabase = getBrowserClient();
     if (!supabase) return;
 
@@ -42,6 +59,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  const handleSelectLanguage = (langName: string) => {
+    setSelectedLang(langName);
+    localStorage.setItem("dojo_active_language", langName);
+    setIsLangOpen(false);
+  };
 
   const handleSignOut = async () => {
     const supabase = getBrowserClient();
@@ -82,17 +105,64 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
       {/* Right Area: Language Selector + User Identity */}
       <div className="flex items-center gap-3">
-        {/* Language Selector Pill */}
+        {/* Language Selector Pill & Dropdown */}
         <div className="relative">
           <Button
             variant="secondary"
             size="sm"
-            className="gap-1.5 bg-[#FFFDF5]"
+            onClick={() => {
+              setIsLangOpen(!isLangOpen);
+              setIsMenuOpen(false);
+            }}
+            className="gap-1.5 bg-[#FFFDF5] hover:bg-[#FBBF24] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
           >
             <Code2 className="h-3.5 w-3.5 text-[#8B5CF6] stroke-[2.5]" />
             <span className="font-heading font-bold">{selectedLang}</span>
             <ChevronDown className="h-3.5 w-3.5 text-[#64748B] stroke-[2.5]" />
           </Button>
+
+          {isLangOpen && (
+            <div className="absolute right-0 mt-2 w-72 rounded-2xl border-2 border-[#1E293B] bg-white p-2 shadow-[6px_6px_0_#1E293B] space-y-1 z-50">
+              <div className="px-3 py-2 border-b-2 border-[#1E293B]/10 flex items-center justify-between">
+                <span className="text-[10px] font-heading font-black uppercase tracking-wider text-[#64748B]">
+                  Choose Programming Language
+                </span>
+                <Sparkles className="h-3 w-3 text-[#8B5CF6]" />
+              </div>
+
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {SUPPORTED_LANGUAGES.map((lang) => {
+                  const isCurrent = selectedLang.startsWith(lang.name.split(" ")[0]);
+                  return (
+                    <button
+                      key={lang.id}
+                      onClick={() => handleSelectLanguage(lang.name)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-heading font-bold transition-all text-left cursor-pointer ${
+                        isCurrent
+                          ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
+                          : "text-[#1E293B] hover:bg-[#FFFDF5] border-2 border-transparent hover:border-[#1E293B]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Code2 className={`h-3.5 w-3.5 ${isCurrent ? "text-white" : "text-[#8B5CF6]"}`} />
+                        <div>
+                          <p className="leading-tight">{lang.name}</p>
+                          <p className={`text-[10px] ${isCurrent ? "text-white/80" : "text-[#64748B]"}`}>
+                            {lang.version}
+                          </p>
+                        </div>
+                      </div>
+                      {isCurrent && <Check className="h-4 w-4 stroke-[3]" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="p-2 border-t-2 border-[#1E293B]/10 bg-[#FFFDF5] rounded-xl text-[10px] text-[#64748B] font-medium leading-tight">
+                OneCompiler sandbox &amp; Sensei AI dynamically execute all languages.
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="h-6 w-0.5 bg-[#1E293B]/20 hidden sm:block" />
@@ -100,7 +170,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* User Identity Pill & Dropdown */}
         <div className="relative">
           <div
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => {
+              setIsMenuOpen(!isMenuOpen);
+              setIsLangOpen(false);
+            }}
             className="flex items-center gap-2.5 pl-1 cursor-pointer"
           >
             <BeltBadge belt="yellow" size="sm" className="hidden md:inline-flex" />
@@ -121,7 +194,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
           {/* Quick User Dropdown */}
           {isMenuOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl border-2 border-[#1E293B] bg-white p-2 shadow-[6px_6px_0_#1E293B] space-y-1">
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl border-2 border-[#1E293B] bg-white p-2 shadow-[6px_6px_0_#1E293B] space-y-1 z-50">
               <div className="px-3 py-2 border-b-2 border-[#1E293B]/10">
                 <p className="font-heading font-black text-xs text-[#1E293B] truncate">{displayName}</p>
                 <p className="text-[10px] text-[#64748B] font-mono truncate">{user?.email || "Signed in"}</p>
