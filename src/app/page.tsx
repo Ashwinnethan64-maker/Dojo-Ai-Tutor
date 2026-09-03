@@ -111,7 +111,13 @@ export default function LandingPage() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="text-sm font-heading font-bold text-[#1E293B] hover:text-[#7C3AED] transition-colors px-3 py-1.5 min-h-[40px] inline-flex items-center"
+          >
+            Sign In
+          </Link>
           <Link href="/login">
             <Button
               variant="primary"
