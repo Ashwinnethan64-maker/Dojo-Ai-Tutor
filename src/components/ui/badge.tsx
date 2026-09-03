@@ -34,7 +34,7 @@ export function Badge({
     danger:
       "bg-[#F43F5E] text-white shadow-[2px_2px_0_#1E293B]",
     purple:
-      "bg-[#8B5CF6] text-white shadow-[2px_2px_0_#1E293B]",
+      "bg-[#7C3AED] text-white shadow-[2px_2px_0_#1E293B]",
     pink:
       "bg-[#F472B6] text-[#1E293B] shadow-[2px_2px_0_#1E293B]",
     amber:

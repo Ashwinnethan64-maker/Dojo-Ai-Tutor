@@ -34,7 +34,7 @@ export function DojoLogo({
         )}
       >
         <Image
-          src="/Dojo_ai.ico"
+          src="/dojo-ai-logo.png"
           alt="DOJO AI"
           width={config.img}
           height={config.img}

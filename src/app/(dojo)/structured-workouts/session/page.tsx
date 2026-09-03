@@ -27,6 +27,7 @@ import Editor from "@monaco-editor/react";
 import { useEditorTheme } from "@/contexts/theme-context";
 import { StructuredWorkout, SupportedStructuredLanguage } from "@/lib/structured-workouts/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
 
 interface TestCaseDetail {
   testIndex: number;
@@ -48,6 +49,7 @@ function StructuredPracticeSessionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { editorTheme } = useEditorTheme();
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   const [queue, setQueue] = useState<StructuredWorkout[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -120,8 +122,14 @@ function StructuredPracticeSessionContent() {
   };
 
   useEffect(() => {
-    fetchSessionQueue();
-  }, []);
+    if (!isAuthLoading && !user) {
+      router.push("/login");
+      return;
+    }
+    if (user) {
+      fetchSessionQueue();
+    }
+  }, [user, isAuthLoading, router]);
 
   const [executionResult, setExecutionResult] = useState<{
     status: "passed" | "failed" | "error" | "idle";

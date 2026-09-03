@@ -31,11 +31,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // 2px solid border, tactile hard shadow, spring transition
     const baseStyles =
-      "inline-flex items-center justify-center font-heading font-bold rounded-full border-2 border-[#1E293B] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#1E293B]";
+      "inline-flex items-center justify-center font-heading font-bold rounded-full border-2 border-[#1E293B] transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#1E293B]";
 
     const variantStyles = {
       primary:
-        "bg-[#8B5CF6] text-white shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B] hover:bg-[#7C3AED]",
+        "bg-[#7C3AED] text-white shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B] hover:bg-[#6D28D9]",
       secondary:
         "bg-white text-[#1E293B] shadow-[4px_4px_0_#1E293B] hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_#1E293B] hover:bg-[#FBBF24]",
       outline:
@@ -53,9 +53,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizeStyles = {
-      sm: "text-xs px-3.5 py-1.5 gap-1.5 min-h-[36px]",
+      sm: "text-xs px-4 py-2 gap-1.5 min-h-[40px] sm:min-h-[36px]",
       md: "text-sm px-5 py-2.5 gap-2 min-h-[44px]",
-      lg: "text-base px-6 py-3 gap-2.5 min-h-[48px]",
+      lg: "text-base px-7 py-3.5 gap-2.5 min-h-[48px]",
       icon: "p-2.5 aspect-square min-h-[44px] min-w-[44px]",
     };
 

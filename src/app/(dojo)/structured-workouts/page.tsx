@@ -20,9 +20,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { StructuredWorkout, SupportedStructuredLanguage, ProgressionTier } from "@/lib/structured-workouts/types";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function StructuredWorkoutsHubPage() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [workouts, setWorkouts] = useState<StructuredWorkout[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedStructuredLanguage | "all">("all");
@@ -63,8 +65,14 @@ export default function StructuredWorkoutsHubPage() {
   };
 
   useEffect(() => {
-    fetchWorkoutsAndProgress();
-  }, []);
+    if (!isAuthLoading && !user) {
+      router.push("/login");
+      return;
+    }
+    if (user) {
+      fetchWorkoutsAndProgress();
+    }
+  }, [user, isAuthLoading, router]);
 
   const handleStartShuffledPractice = () => {
     const query = new URLSearchParams();
