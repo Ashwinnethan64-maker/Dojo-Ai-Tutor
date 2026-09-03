@@ -29,6 +29,7 @@ import { WorkoutData } from "@/data/python-curriculum";
 import { useLanguage } from "@/contexts/language-context";
 import { useEditorTheme } from "@/contexts/theme-context";
 import { getCurriculumForLanguage } from "@/data/curriculum-registry";
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
 interface TestCaseDetail {
@@ -48,6 +49,7 @@ export default function DynamicWorkoutWorkspace({
   const resolvedParams = use(params);
   const { activeLanguage, activeLanguageId } = useLanguage();
   const { editorTheme } = useEditorTheme();
+  const { updateUserStats } = useAuth();
 
   const topics = getCurriculumForLanguage(activeLanguageId);
 
@@ -233,6 +235,11 @@ export default function DynamicWorkoutWorkspace({
         testResults: detailedTests,
         mode: "run_tests",
       });
+
+      // Real-time XP & progression update
+      if (isPassedStatus) {
+        updateUserStats(50);
+      }
     } catch (err: any) {
       setExecutionResult({
         status: "error",

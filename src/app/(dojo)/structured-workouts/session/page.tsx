@@ -49,7 +49,7 @@ function StructuredPracticeSessionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { editorTheme } = useEditorTheme();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, updateUserStats } = useAuth();
 
   const [queue, setQueue] = useState<StructuredWorkout[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -235,6 +235,11 @@ function StructuredPracticeSessionContent() {
         testResults: data.testResults,
         mode: "run_tests",
       });
+
+      // Real-time XP & progression update
+      if (isAllPassed) {
+        updateUserStats(50);
+      }
     } catch (err: any) {
       setExecutionResult({
         status: "error",

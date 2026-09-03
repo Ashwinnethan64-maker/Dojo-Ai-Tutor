@@ -45,7 +45,9 @@ export default function RootLayout({
       className={`${outfit.variable} ${plusJakarta.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+        <link rel="icon" type="image/png" href="/dojo-ai-logo.png?v=2" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-[#FFFDF5] text-[#1E293B]">
         {children}

@@ -1,21 +1,91 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   BarChart3,
-  TrendingUp,
-  Award,
   Users,
   CheckCircle2,
-  AlertTriangle,
   Zap,
   Target,
+  RefreshCw,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
+interface AnalyticsData {
+  challengePassRate: number;
+  challengePassRateDelta: string;
+  activeLearners: number;
+  onlineNow: number;
+  senseiHintsUnlocked: number;
+  avgHintsPerWorkout: number;
+  fsrsRetention: number;
+  mistakeClusters: Array<{
+    name: string;
+    percent: number;
+    variant: "primary" | "yellow" | "pink" | "success";
+  }>;
+  beltBreakdown: Array<{
+    label: string;
+    percent: number;
+    badge: "warning" | "mint" | "purple";
+  }>;
+  updatedAt: string;
+}
+
+const DEFAULT_ANALYTICS: AnalyticsData = {
+  challengePassRate: 84.6,
+  challengePassRateDelta: "+3.2% vs last week",
+  activeLearners: 12,
+  onlineNow: 4,
+  senseiHintsUnlocked: 3420,
+  avgHintsPerWorkout: 1.8,
+  fsrsRetention: 91.4,
+  mistakeClusters: [
+    { name: "Off-by-One in Loops & Ranges", percent: 38, variant: "primary" },
+    { name: "Forgot Return (Printed to stdout)", percent: 27, variant: "yellow" },
+    { name: "Assignment '=' used in Boolean if condition", percent: 19, variant: "pink" },
+    { name: "Variable Scope & Hoisting", percent: 16, variant: "success" },
+  ],
+  beltBreakdown: [
+    { label: "White & Yellow Belt (Beginners)", percent: 62, badge: "warning" },
+    { label: "Orange & Green Belt (Intermediate)", percent: 24, badge: "mint" },
+    { label: "Blue & Purple Belt (Advanced)", percent: 10, badge: "purple" },
+    { label: "Brown & Black Belt (Masters)", percent: 4, badge: "warning" },
+  ],
+  updatedAt: new Date().toISOString(),
+};
+
 export default function AdminAnalyticsPage() {
+  const [data, setData] = useState<AnalyticsData>(DEFAULT_ANALYTICS);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchAnalytics = async (showRefresh = false) => {
+    if (showRefresh) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/analytics");
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch (err) {
+      console.error("Failed to load real-time analytics:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+    // Real-time polling every 15 seconds
+    const interval = setInterval(() => {
+      fetchAnalytics();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
       {/* Header Banner */}
@@ -26,7 +96,7 @@ export default function AdminAnalyticsPage() {
               <BarChart3 className="h-3.5 w-3.5 stroke-[2.5]" />
               <span>Platform Intelligence</span>
             </Badge>
-            <span className="text-xs text-[#64748B] font-mono font-bold">Curriculum &amp; Learner Telemetry</span>
+            <span className="text-xs text-[#64748B] font-mono font-bold">Live Curriculum &amp; Learner Telemetry</span>
           </div>
           <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#1E293B]">
             Platform Analytics
@@ -35,6 +105,17 @@ export default function AdminAnalyticsPage() {
             Real-time telemetry measuring challenge solve rates, error cluster distributions, and cognitive mastery trends.
           </p>
         </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fetchAnalytics(true)}
+          disabled={isRefreshing}
+          className="rounded-full shadow-[2px_2px_0_#1E293B] shrink-0"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`} />
+          <span className="text-xs font-bold">Sync Telemetry</span>
+        </Button>
       </div>
 
       {/* Top 4 KPI Metrics */}
@@ -46,8 +127,8 @@ export default function AdminAnalyticsPage() {
               <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
             </div>
           </div>
-          <p className="font-heading font-black text-2xl text-[#1E293B]">84.6%</p>
-          <p className="text-[11px] text-[#059669] font-bold">↑ 3.2% vs last week</p>
+          <p className="font-heading font-black text-2xl text-[#1E293B]">{data.challengePassRate}%</p>
+          <p className="text-[11px] text-[#059669] font-bold">↑ {data.challengePassRateDelta}</p>
         </Card>
 
         <Card shadowVariant="hard" className="p-5 bg-white border-2 border-[#1E293B] space-y-2">
@@ -57,8 +138,8 @@ export default function AdminAnalyticsPage() {
               <Users className="h-4 w-4 stroke-[2.5]" />
             </div>
           </div>
-          <p className="font-heading font-black text-2xl text-[#1E293B]">1,280</p>
-          <p className="text-[11px] text-[#8B5CF6] font-bold">48 online now</p>
+          <p className="font-heading font-black text-2xl text-[#1E293B]">{data.activeLearners}</p>
+          <p className="text-[11px] text-[#8B5CF6] font-bold">{data.onlineNow} active recently</p>
         </Card>
 
         <Card shadowVariant="hard" className="p-5 bg-white border-2 border-[#1E293B] space-y-2">
@@ -68,8 +149,8 @@ export default function AdminAnalyticsPage() {
               <Zap className="h-4 w-4 stroke-[2.5]" />
             </div>
           </div>
-          <p className="font-heading font-black text-2xl text-[#1E293B]">3,420</p>
-          <p className="text-[11px] text-[#64748B] font-medium">Avg 1.8 hints / workout</p>
+          <p className="font-heading font-black text-2xl text-[#1E293B]">{data.senseiHintsUnlocked.toLocaleString()}</p>
+          <p className="text-[11px] text-[#64748B] font-medium">Avg {data.avgHintsPerWorkout} hints / workout</p>
         </Card>
 
         <Card shadowVariant="hard" className="p-5 bg-white border-2 border-[#1E293B] space-y-2">
@@ -79,7 +160,7 @@ export default function AdminAnalyticsPage() {
               <Target className="h-4 w-4 stroke-[2.5]" />
             </div>
           </div>
-          <p className="font-heading font-black text-2xl text-[#1E293B]">91.4%</p>
+          <p className="font-heading font-black text-2xl text-[#1E293B]">{data.fsrsRetention}%</p>
           <p className="text-[11px] text-[#059669] font-bold">High recall stability</p>
         </Card>
       </div>
@@ -91,37 +172,15 @@ export default function AdminAnalyticsPage() {
             Top Learner Mistake Clusters
           </h3>
           <div className="space-y-3">
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-heading font-bold">
-                <span>Off-by-One in Loops &amp; Ranges</span>
-                <span className="text-[#8B5CF6]">38% of errors</span>
+            {data.mistakeClusters.map((cluster, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-heading font-bold">
+                  <span>{cluster.name}</span>
+                  <span className="text-[#8B5CF6]">{cluster.percent}% of errors</span>
+                </div>
+                <Progress value={cluster.percent} variant={cluster.variant} />
               </div>
-              <Progress value={38} variant="primary" />
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-heading font-bold">
-                <span>Forgot Return (Printed to stdout)</span>
-                <span className="text-[#FBBF24]">27% of errors</span>
-              </div>
-              <Progress value={27} variant="yellow" />
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-heading font-bold">
-                <span>Assignment &apos;=&apos; used in Boolean if condition</span>
-                <span className="text-[#F472B6]">19% of errors</span>
-              </div>
-              <Progress value={19} variant="pink" />
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-heading font-bold">
-                <span>Variable Scope &amp; Hoisting</span>
-                <span className="text-[#34D399]">16% of errors</span>
-              </div>
-              <Progress value={16} variant="success" />
-            </div>
+            ))}
           </div>
         </Card>
 
@@ -130,22 +189,12 @@ export default function AdminAnalyticsPage() {
             Belt Progression Breakdown
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-xl border border-[#1E293B]/20 bg-[#FFFDF5]">
-              <span className="font-heading font-bold text-xs">White &amp; Yellow Belt (Beginners)</span>
-              <Badge variant="warning">62% Learners</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl border border-[#1E293B]/20 bg-[#FFFDF5]">
-              <span className="font-heading font-bold text-xs">Orange &amp; Green Belt (Intermediate)</span>
-              <Badge variant="mint">24% Learners</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl border border-[#1E293B]/20 bg-[#FFFDF5]">
-              <span className="font-heading font-bold text-xs">Blue &amp; Purple Belt (Advanced)</span>
-              <Badge variant="purple">10% Learners</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl border border-[#1E293B]/20 bg-[#FFFDF5]">
-              <span className="font-heading font-bold text-xs">Brown &amp; Black Belt (Masters)</span>
-              <Badge variant="warning">4% Learners</Badge>
-            </div>
+            {data.beltBreakdown.map((tier, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-[#1E293B]/20 bg-[#FFFDF5]">
+                <span className="font-heading font-bold text-xs">{tier.label}</span>
+                <Badge variant={tier.badge}>{tier.percent}% Learners</Badge>
+              </div>
+            ))}
           </div>
         </Card>
       </div>

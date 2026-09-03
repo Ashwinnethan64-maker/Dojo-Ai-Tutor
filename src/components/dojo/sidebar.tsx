@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { BeltBadge } from "@/components/dojo/belt";
 import { DojoLogo } from "@/components/dojo/logo";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -65,8 +66,15 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { activeLanguage } = useLanguage();
+  const { profile } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Dynamic user metrics
+  const streakDays = profile?.streakDays ?? 1;
+  const totalXP = profile?.totalXP ?? 250;
+  const formattedXP = totalXP.toLocaleString();
+  const currentBelt = (profile?.belt as any) || "yellow";
 
   const handleMouseEnter = () => {
     if (isMobileDrawer) return;
@@ -125,7 +133,7 @@ export function Sidebar({
                 {activeLanguage.shortName}
               </span>
             </div>
-            <BeltBadge belt="yellow" size="sm" className="w-full justify-center" />
+            <BeltBadge belt={currentBelt} size="sm" className="w-full justify-center" />
           </div>
         ) : (
           <div
@@ -138,22 +146,10 @@ export function Sidebar({
       </div>
 
       {/* Navigation List */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1.5">
-        {isExpanded && (
-          <div className="px-2.5 pb-1">
-            <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
-              DOJO Training
-            </span>
-          </div>
-        )}
-
+      <div className="flex-1 overflow-y-auto px-2 py-3 space-y-1 scrollbar-none">
         {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+          const isActive = pathname === item.href;
           const Icon = item.icon;
-
           return (
             <Link
               key={item.href}
@@ -161,47 +157,35 @@ export function Sidebar({
               onClick={onNavigate}
               title={!isExpanded ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group overflow-hidden",
-                isExpanded ? "justify-between px-3 py-2.5" : "justify-center w-10 h-10 mx-auto p-0",
+                "flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-heading font-bold transition-all duration-150 relative group",
                 isActive
-                  ? "bg-[#8B5CF6] text-white border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
-                  : "text-[#1E293B] hover:bg-[#FFFDF5] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
+                  ? "bg-[#FFFDF5] text-[#1E293B] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
+                  : "text-[#64748B] hover:bg-[#FFFDF5] hover:text-[#1E293B] border-2 border-transparent hover:border-[#1E293B] hover:shadow-[2px_2px_0_#1E293B]"
               )}
             >
-              <div className="flex items-center gap-2.5">
-                <Icon
-                  className={cn(
-                    "h-4.5 w-4.5 stroke-[2.5] shrink-0",
-                    isActive ? "text-white" : "text-[#8B5CF6] group-hover:scale-110 transition-transform"
+              <Icon
+                className={cn(
+                  "h-4.5 w-4.5 stroke-[2.5] shrink-0",
+                  isActive ? "text-[#1E293B]" : "text-[#94A3B8] group-hover:text-[#1E293B]"
+                )}
+              />
+              {isExpanded && (
+                <div className="flex-1 flex items-center justify-between min-w-0">
+                  <span className="truncate">{item.label}</span>
+                  {item.badge && (
+                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#8B5CF6]/15 text-[#8B5CF6] border border-[#8B5CF6]/30">
+                      {item.badge}
+                    </span>
                   )}
-                />
-                {isExpanded && <span className="truncate">{item.label}</span>}
-              </div>
-
-              {isExpanded && item.badge && (
-                <span
-                  className={cn(
-                    "px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-[#1E293B] shrink-0",
-                    isActive
-                      ? "bg-[#FBBF24] text-[#1E293B]"
-                      : "bg-[#F1F5F9] text-[#1E293B]"
-                  )}
-                >
-                  {item.badge}
-                </span>
+                </div>
               )}
             </Link>
           );
         })}
+      </div>
 
-        {isExpanded && (
-          <div className="px-2.5 pb-1 pt-3">
-            <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#94A3B8]">
-              Account &amp; Workspace
-            </span>
-          </div>
-        )}
-
+      {/* Secondary Bottom Links */}
+      <div className="px-2 py-2 border-t-2 border-[#1E293B] space-y-1">
         {SECONDARY_NAV.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -212,11 +196,10 @@ export function Sidebar({
               onClick={onNavigate}
               title={!isExpanded ? item.label : undefined}
               className={cn(
-                "flex items-center rounded-xl font-heading text-xs font-bold transition-all duration-150 group overflow-hidden",
-                isExpanded ? "gap-2.5 px-3 py-2" : "justify-center w-10 h-10 mx-auto p-0",
+                "flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-heading font-bold transition-all duration-150 group",
                 isActive
-                  ? "bg-[#F472B6] text-[#1E293B] border-2 border-[#1E293B] shadow-[3px_3px_0_#1E293B]"
-                  : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] hover:border-2 hover:border-[#1E293B] border-2 border-transparent"
+                  ? "bg-[#FFFDF5] text-[#1E293B] border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]"
+                  : "text-[#64748B] hover:bg-[#FFFDF5] hover:text-[#1E293B] border-2 border-transparent hover:border-[#1E293B] hover:shadow-[2px_2px_0_#1E293B]"
               )}
             >
               <Icon
@@ -240,17 +223,17 @@ export function Sidebar({
           <div className="flex items-center justify-between text-xs font-heading font-bold">
             <div className="flex items-center gap-1.5 text-[#1E293B] bg-[#FBBF24] px-2.5 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
               <Flame className="h-3.5 w-3.5 fill-current stroke-[2.5]" />
-              <span>5 Days</span>
+              <span>{streakDays} {streakDays === 1 ? "Day" : "Days"}</span>
             </div>
             <div className="flex items-center gap-1.5 text-white bg-[#8B5CF6] px-2.5 py-1 rounded-full border-2 border-[#1E293B] shadow-[2px_2px_0_#1E293B]">
               <Zap className="h-3.5 w-3.5 fill-current stroke-[2.5]" />
-              <span>1,420 XP</span>
+              <span>{formattedXP} XP</span>
             </div>
           </div>
         ) : (
           <div
             className="w-8 h-8 rounded-full bg-[#FBBF24] border-2 border-[#1E293B] flex items-center justify-center text-[#1E293B] shadow-[1px_1px_0_#1E293B]"
-            title="5 Day Streak | 1,420 XP"
+            title={`${streakDays} Day Streak | ${formattedXP} XP`}
           >
             <Flame className="h-4 w-4 fill-current" />
           </div>

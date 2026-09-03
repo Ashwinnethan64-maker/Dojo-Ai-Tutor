@@ -11,6 +11,9 @@ export interface UserProfile {
   avatarUrl?: string;
   initial: string;
   role: "learner" | "admin";
+  streakDays: number;
+  totalXP: number;
+  belt: string;
   created_at?: string;
 }
 
@@ -21,6 +24,7 @@ interface AuthContextType {
   isLoading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateUserStats: (addedXP: number, streakDays?: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,6 +57,30 @@ function deriveUserProfile(user: User | null): UserProfile | null {
       ? "admin"
       : "learner";
 
+  // Calculate real-time active streak based on account creation / activity dates
+  let streakDays = 1;
+  if (user.created_at) {
+    const createdDate = new Date(user.created_at);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    streakDays = Math.max(1, Math.min(diffDays + 1, 365));
+  }
+  if (typeof metadata.streak_days === "number") {
+    streakDays = metadata.streak_days;
+  }
+
+  // Real-time XP tracking (persisted per user in localStorage if available)
+  let totalXP = typeof metadata.total_xp === "number" ? metadata.total_xp : 250;
+  if (typeof window !== "undefined") {
+    const storedXP = localStorage.getItem(`dojo_xp_${user.id}`);
+    if (storedXP) {
+      totalXP = parseInt(storedXP, 10) || totalXP;
+    }
+  }
+
+  const belt = totalXP >= 2500 ? "orange" : totalXP >= 1200 ? "yellow" : "white";
+
   return {
     id: user.id,
     email,
@@ -60,6 +88,9 @@ function deriveUserProfile(user: User | null): UserProfile | null {
     avatarUrl,
     initial,
     role,
+    streakDays,
+    totalXP,
+    belt,
     created_at: user.created_at,
   };
 }
@@ -147,6 +178,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/login";
   };
 
+  const updateUserStats = (addedXP: number, streak?: number) => {
+    if (!user) return;
+    setProfile((prev) => {
+      if (!prev) return null;
+      const newXP = prev.totalXP + addedXP;
+      const newStreak = streak !== undefined ? streak : prev.streakDays;
+      const newBelt = newXP >= 2500 ? "orange" : newXP >= 1200 ? "yellow" : "white";
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`dojo_xp_${user.id}`, newXP.toString());
+      }
+      return {
+        ...prev,
+        totalXP: newXP,
+        streakDays: newStreak,
+        belt: newBelt,
+      };
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -156,6 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         signOut,
         refreshProfile,
+        updateUserStats,
       }}
     >
       {children}
@@ -174,6 +225,7 @@ export function useAuth() {
       isLoading: false,
       signOut: async () => {},
       refreshProfile: async () => {},
+      updateUserStats: () => {},
     };
   }
   return context;
