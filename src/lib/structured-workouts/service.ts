@@ -1,11 +1,6 @@
 import {
   StructuredWorkout,
-  LearnerPracticeHistory,
-  ShuffleConfig,
-  SupportedStructuredLanguage,
-  ProgressionTier,
 } from "./types";
-import { IsolatedExecutionService } from "@/lib/execution/service";
 
 // In-memory canonical structured workouts database
 let structuredWorkoutsStore: StructuredWorkout[] = [];

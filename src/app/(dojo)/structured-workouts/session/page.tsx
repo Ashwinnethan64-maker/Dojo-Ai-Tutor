@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -13,11 +13,9 @@ import {
   BookOpen,
   Code2,
   Clock,
-  Shuffle,
   ShieldAlert,
   Layers,
   ChevronRight,
-  Trophy,
   Sparkles,
   Lightbulb,
 } from "lucide-react";
@@ -80,7 +78,7 @@ function StructuredPracticeSessionContent() {
 
   const currentWorkout = queue[currentIndex];
 
-  const fetchSessionQueue = async () => {
+  const fetchSessionQueue = useCallback(async () => {
     setIsLoading(true);
     try {
       const explicitWorkoutId = searchParams.get("workoutId");
@@ -119,7 +117,7 @@ function StructuredPracticeSessionContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -129,7 +127,7 @@ function StructuredPracticeSessionContent() {
     if (user) {
       fetchSessionQueue();
     }
-  }, [user, isAuthLoading, router]);
+  }, [user, isAuthLoading, router, fetchSessionQueue]);
 
   const [executionResult, setExecutionResult] = useState<{
     status: "passed" | "failed" | "error" | "idle";
@@ -167,20 +165,22 @@ function StructuredPracticeSessionContent() {
 
       const data = await res.json();
       const endTime = performance.now();
+      const statusStr: string = data.status || "";
 
       setExecutionResult({
-        status: data.status === "Accepted" ? "passed" : data.status.includes("Error") ? "error" : "failed",
+        status: statusStr === "Accepted" ? "passed" : statusStr.toLowerCase().includes("error") ? "error" : "failed",
         stdout: data.stdout || "",
         stderr: data.stderr || data.compileOutput || "",
-        passedTests: data.status === "Accepted" ? 1 : 0,
+        passedTests: statusStr === "Accepted" ? 1 : 0,
         totalTests: 1,
         timeMs: data.executionTimeMs || Math.round(endTime - startTime),
         mode: "run_code",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Execution error";
       setExecutionResult({
         status: "error",
-        stderr: err.message || "Execution error",
+        stderr: errorMsg,
         passedTests: 0,
         totalTests: 1,
         timeMs: 0,
@@ -212,7 +212,29 @@ function StructuredPracticeSessionContent() {
       const endTime = performance.now();
       const totalT = currentWorkout.visibleTestCases.length + currentWorkout.hiddenTestCases.length;
       const passedT = data.passedTests ?? (data.status === "Accepted" ? totalT : 0);
-      const isAllPassed = data.status === "Accepted";
+      const isAllPassed = data.status === "Accepted" || data.status === "passed" || passedT === totalT;
+      const statusStr: string = data.status || "";
+
+      const detailedTests: TestCaseDetail[] = (data.testResults && data.testResults.length > 0)
+        ? data.testResults
+        : [
+            ...currentWorkout.visibleTestCases.map((tc, idx) => ({
+              testIndex: idx + 1,
+              stdin: tc.stdin,
+              expectedOutput: tc.expectedOutput,
+              actualOutput: isAllPassed ? tc.expectedOutput : "None",
+              passed: isAllPassed,
+              isHidden: false,
+            })),
+            ...currentWorkout.hiddenTestCases.map((tc, idx) => ({
+              testIndex: currentWorkout.visibleTestCases.length + idx + 1,
+              stdin: tc.stdin,
+              expectedOutput: tc.expectedOutput,
+              actualOutput: isAllPassed ? tc.expectedOutput : "None",
+              passed: isAllPassed,
+              isHidden: true,
+            })),
+          ];
 
       // Record attempt in adaptive progression engine
       await fetch("/api/structured-workouts", {
@@ -226,13 +248,13 @@ function StructuredPracticeSessionContent() {
       });
 
       setExecutionResult({
-        status: isAllPassed ? "passed" : data.status.includes("Error") ? "error" : "failed",
+        status: isAllPassed ? "passed" : statusStr.toLowerCase().includes("error") ? "error" : "failed",
         stdout: data.stdout || "",
         stderr: data.stderr || data.compileOutput || "",
         passedTests: passedT,
         totalTests: totalT,
         timeMs: data.executionTimeMs || Math.round(endTime - startTime),
-        testResults: data.testResults,
+        testResults: detailedTests,
         mode: "run_tests",
       });
 
@@ -240,10 +262,11 @@ function StructuredPracticeSessionContent() {
       if (isAllPassed) {
         updateUserStats(50);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Test suite error";
       setExecutionResult({
         status: "error",
-        stderr: err.message || "Test suite error",
+        stderr: errorMsg,
         passedTests: 0,
         totalTests: currentWorkout.visibleTestCases.length + currentWorkout.hiddenTestCases.length,
         timeMs: 0,

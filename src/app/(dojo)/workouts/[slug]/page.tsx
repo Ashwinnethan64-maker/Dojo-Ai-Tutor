@@ -6,8 +6,6 @@ import {
   Play,
   RotateCcw,
   Sparkles,
-  HelpCircle,
-  Bug,
   CheckCircle2,
   XCircle,
   Terminal,
@@ -15,20 +13,17 @@ import {
   BookOpen,
   Code2,
   Clock,
-  Send,
-  Eye,
   Layers,
-  ChevronRight,
   ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BeltBadge } from "@/components/dojo/belt";
 import Editor from "@monaco-editor/react";
 import { WorkoutData } from "@/data/python-curriculum";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage, SUPPORTED_LANGUAGES, SupportedLanguageId } from "@/contexts/language-context";
 import { useEditorTheme } from "@/contexts/theme-context";
-import { getCurriculumForLanguage } from "@/data/curriculum-registry";
+import { getCurriculumForLanguage, CURRICULUM_BY_LANGUAGE } from "@/data/curriculum-registry";
+import { StructuredWorkoutService } from "@/lib/structured-workouts/service";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -53,18 +48,61 @@ export default function DynamicWorkoutWorkspace({
 
   const topics = getCurriculumForLanguage(activeLanguageId);
 
-  // Find workout by slug across topics of current language track
+  // Find workout by slug across topics of current language track first, then across all tracks or StructuredWorkoutService
   let matchedWorkout: WorkoutData | undefined;
   let matchedTopic = topics[0];
+  let effectiveLanguageId: SupportedLanguageId = activeLanguageId;
 
   for (const topic of topics) {
     const found = topic.workouts.find((w) => w.slug === resolvedParams.slug || w.id === resolvedParams.slug);
     if (found) {
       matchedWorkout = found;
       matchedTopic = topic;
+      effectiveLanguageId = activeLanguageId;
       break;
     }
   }
+
+  if (!matchedWorkout) {
+    for (const lang of SUPPORTED_LANGUAGES) {
+      const langTopics = CURRICULUM_BY_LANGUAGE[lang.id] || [];
+      for (const topic of langTopics) {
+        const found = topic.workouts.find((w) => w.slug === resolvedParams.slug || w.id === resolvedParams.slug);
+        if (found) {
+          matchedWorkout = found;
+          matchedTopic = topic;
+          effectiveLanguageId = lang.id;
+          break;
+        }
+      }
+      if (matchedWorkout) break;
+    }
+  }
+
+  if (!matchedWorkout) {
+    const structFound = StructuredWorkoutService.getWorkoutBySlugOrId(resolvedParams.slug);
+    if (structFound) {
+      matchedWorkout = {
+        id: structFound.id,
+        slug: structFound.slug,
+        title: structFound.title,
+        difficulty: structFound.difficulty,
+        learningObjective: structFound.problemStatement,
+        description: structFound.problemStatement,
+        instructions: `${structFound.inputFormat}\n${structFound.outputFormat}`,
+        starterCode: structFound.starterCode,
+        solutionCode: structFound.solutionCode,
+        concepts: structFound.concepts,
+        hints: structFound.hints,
+        visibleTestCases: structFound.visibleTestCases,
+        hiddenTestCases: structFound.hiddenTestCases,
+      };
+      effectiveLanguageId = structFound.languageId;
+    }
+  }
+
+  const effectiveLanguage =
+    SUPPORTED_LANGUAGES.find((l) => l.id === effectiveLanguageId) || activeLanguage;
 
   // Fallback workout if not matched
   const fallbackWorkout: WorkoutData = topics[0]?.workouts[0] || {
@@ -103,6 +141,26 @@ export default function DynamicWorkoutWorkspace({
   const [isHintLoading, setIsHintLoading] = useState<boolean>(false);
   const [streamingText, setStreamingText] = useState<string>("");
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Sync starter code and test state when the resolved workout changes (e.g., on language switch or navigation)
+  const prevWorkoutIdRef = useRef<string>(workout.id);
+  useEffect(() => {
+    if (prevWorkoutIdRef.current !== workout.id) {
+      prevWorkoutIdRef.current = workout.id;
+      setCode(workout.starterCode);
+      setCustomStdin(workout.visibleTestCases[0]?.stdin || "");
+      setSelectedTestCaseIndex(0);
+      setHintLevel(0);
+      setAiHints([]);
+      setExecutionResult({
+        status: "idle",
+        passedTests: 0,
+        totalTests: workout.visibleTestCases.length + workout.hiddenTestCases.length,
+        timeMs: 0,
+        mode: "run_tests",
+      });
+    }
+  }, [workout.id, workout.starterCode, workout.visibleTestCases, workout.hiddenTestCases]);
 
   // Timer state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -147,27 +205,29 @@ export default function DynamicWorkoutWorkspace({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sourceCode: code,
-          languageId: activeLanguageId,
+          languageId: effectiveLanguageId,
           stdin: customStdin,
         }),
       });
 
       const result = await response.json();
       const endTime = performance.now();
+      const statusStr: string = result.status || "";
 
       setExecutionResult({
-        status: result.status === "Accepted" ? "passed" : result.status.includes("Error") ? "error" : "failed",
+        status: statusStr === "Accepted" ? "passed" : statusStr.toLowerCase().includes("error") ? "error" : "failed",
         stdout: result.stdout || "",
         stderr: result.stderr || result.compileOutput || "",
-        passedTests: result.status === "Accepted" ? 1 : 0,
+        passedTests: statusStr === "Accepted" ? 1 : 0,
         totalTests: 1,
         timeMs: result.executionTimeMs || Math.round(endTime - startTime),
         mode: "run_code",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed running code in sandbox";
       setExecutionResult({
         status: "error",
-        stderr: err.message || "Failed running code in sandbox",
+        stderr: errorMsg,
         passedTests: 0,
         totalTests: 1,
         timeMs: 0,
@@ -191,7 +251,7 @@ export default function DynamicWorkoutWorkspace({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sourceCode: code,
-          languageId: activeLanguageId,
+          languageId: effectiveLanguageId,
           workoutId: workout.slug || workout.id,
         }),
       });
@@ -240,10 +300,11 @@ export default function DynamicWorkoutWorkspace({
       if (isPassedStatus) {
         updateUserStats(50);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Test suite execution failed";
       setExecutionResult({
         status: "error",
-        stderr: err.message || "Test suite execution failed",
+        stderr: errorMsg,
         passedTests: 0,
         totalTests: workout.visibleTestCases.length + workout.hiddenTestCases.length,
         timeMs: 0,
@@ -278,7 +339,7 @@ export default function DynamicWorkoutWorkspace({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          languageId: activeLanguageId,
+          languageId: effectiveLanguageId,
           workoutId: workout.slug || workout.id,
           workoutTitle: workout.title,
           learningObjective: workout.learningObjective,
@@ -329,8 +390,8 @@ export default function DynamicWorkoutWorkspace({
         setHintLevel(nextLevel);
       }
       setStreamingText("");
-    } catch (err: any) {
-      if (err.name === "AbortError") return;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
       const fallbackMsg = baseHint || "Check your variable initializations and boundary conditions.";
       setAiHints((prev) => [...prev, fallbackMsg]);
       setHintLevel(nextLevel);
@@ -364,7 +425,7 @@ export default function DynamicWorkoutWorkspace({
 
           <div className="flex items-center gap-2">
             <Badge variant="purple" className="uppercase text-[10px] font-mono">
-              {activeLanguage.name}
+              {effectiveLanguage.name}
             </Badge>
             <Badge variant={workout.difficulty === "easy" ? "success" : "warning"} className="text-[10px]">
               {workout.difficulty}
@@ -542,11 +603,11 @@ export default function DynamicWorkoutWorkspace({
           <div className="h-11 bg-[#252526] px-4 border-b border-[#333333] flex items-center justify-between text-xs text-[#CCCCCC] shrink-0 select-none">
             <div className="flex items-center gap-2">
               <Code2 className="h-4 w-4 text-[#8B5CF6] stroke-[2.5]" />
-              <span className="font-mono font-bold text-white">{activeLanguage.defaultFilename}</span>
+              <span className="font-mono font-bold text-white">{effectiveLanguage.defaultFilename}</span>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono text-[#94A3B8]">{activeLanguage.name} (Active)</span>
+              <span className="text-[10px] font-mono text-[#94A3B8]">{effectiveLanguage.name} (Active)</span>
             </div>
           </div>
 
@@ -554,7 +615,7 @@ export default function DynamicWorkoutWorkspace({
           <div className="flex-1 min-h-[280px]">
             <Editor
               height="100%"
-              language={activeLanguage.editorLanguage}
+              language={effectiveLanguage.editorLanguage}
               theme={editorTheme}
               value={code}
               onChange={(newVal) => setCode(newVal || "")}
