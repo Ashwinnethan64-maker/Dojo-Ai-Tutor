@@ -1,4 +1,3 @@
-/// <reference path="../../types/node-ambient.d.ts" />
 import { OneCompilerService, OneCompilerRunResponse } from "./onecompiler";
 import {
   ExecutionResultResponse,
@@ -15,7 +14,9 @@ import { AdminContentService } from "@/lib/admin/service";
 import { StructuredWorkoutService } from "@/lib/structured-workouts/service";
 import { SemanticEvaluatorService } from "@/lib/ai/evaluator";
 
+// @ts-ignore - resolved by @types/node during build
 import * as vm from "node:vm";
+// @ts-ignore - resolved by @types/node during build
 import { spawnSync } from "node:child_process";
 
 export type ExecutionMode = "FUNCTION" | "STDIN_STDOUT";
@@ -47,10 +48,11 @@ export class IsolatedExecutionService {
       workout = this.resolveWorkout(workoutId, normalizedLang);
     }
 
-    const hasOneCompilerKey = Boolean(
-      process.env.ONECOMPILER_API_KEY &&
-        process.env.ONECOMPILER_API_KEY !== "your-onecompiler-api-key"
-    );
+      const env = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env || {};
+      const hasOneCompilerKey = Boolean(
+        env.ONECOMPILER_API_KEY &&
+          env.ONECOMPILER_API_KEY !== "your-onecompiler-api-key"
+      );
 
     // 2. If OneCompiler Key is provided and workout is NOT provided (raw playground / Run Code execution)
     if (hasOneCompilerKey && !workout) {
